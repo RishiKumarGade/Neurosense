@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Map Game - NeuroSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 60px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem 0;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar.expanded {
+            width: 250px;
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #be185d;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-toggle:hover {
+            background-color: #eef2ff;
+        }
+
+        .nav-item {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            color: #64748b;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background-color: #eef2ff;
+            color: #be185d;
+        }
+
+        .nav-item.active {
+            background-color: #be185d;
+            color: white;
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            min-width: 20px;
+        }
+
+        .nav-text {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .sidebar.expanded .nav-text {
+            opacity: 1;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 60px;
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.expanded + .main-content {
+            margin-left: 250px;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        /* Game Container */
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .game-header h1 {
+            font-size: 2.5rem;
+            color: #be185d;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .game-header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        /* Game Board */
+        .game-board {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            margin-bottom: 2rem;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: linear-gradient(135deg, #fce7f3, #eef2ff);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #be185d;
+            margin-top: 0.25rem;
+        }
+
+        /* Instructions */
+        .instructions {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #6366f1;
+        }
+
+        .instructions h3 {
+            color: #3730a3;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .instructions ol {
+            color: #4338ca;
+            margin-left: 1.5rem;
+            line-height: 1.6;
+        }
+
+        /* Room Grid */
+        .room-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            position: relative;
+        }
+
+        .room-title {
+            text-align: center;
+            font-size: 1.3rem;
+            color: #be185d;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            background: linear-gradient(135deg, #fce7f3, #f8fafc);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .grid-cell {
+            aspect-ratio: 1;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .grid-cell:hover {
+            transform: scale(1.05);
+            border-color: #be185d;
+            box-shadow: 0 4px 8px rgba(190, 24, 93, 0.2);
+        }
+
+        .grid-cell.has-object {
+            background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+            border-color: #be185d;
+        }
+
+        .grid-cell.correct {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            border-color: #22c55e;
+            animation: correct-bounce 0.5s ease;
+        }
+
+        .grid-cell.incorrect {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border-color: #ef4444;
+            animation: incorrect-shake 0.5s ease;
+        }
+
+        .grid-cell.revealed {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-color: #eab308;
+        }
+
+        .grid-cell.hidden .object {
+            opacity: 0;
+        }
+
+        @keyframes correct-bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        @keyframes incorrect-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        /* Timer */
+        .timer-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .timer {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #be185d;
+            background: linear-gradient(135deg, #fce7f3, #eef2ff);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .timer.warning {
+            color: #ef4444;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Object Legend */
+        .object-legend {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-radius: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #78350f;
+            font-weight: 500;
+        }
+
+        .legend-icon {
+            font-size: 1.5rem;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+        }
+
+        .control-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .control-btn.secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* Status Message */
+        .status-message {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 1.5rem 0;
+            min-height: 2rem;
+            color: #be185d;
+        }
+
+        .status-message.success {
+            color: #22c55e;
+        }
+
+        .status-message.error {
+            color: #ef4444;
+        }
+
+        /* Difficulty Selector */
+        .difficulty-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .difficulty-btn {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .difficulty-btn:hover {
+            border-color: #be185d;
+            color: #be185d;
+        }
+
+        .difficulty-btn.active {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border-color: #be185d;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.expanded {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .game-header h1 {
+                font-size: 2rem;
+            }
+
+            .grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .game-board {
+                padding: 2rem 1rem;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">NeuroSense</div>
+            <button class="back-btn" onclick="window.location.href='/memory-challenge'">
+                ← Back to Memory Games
+            </button>
+        </header>
+
+        <!-- Game Container -->
+        <div class="game-container">
+            <div class="game-header">
+                <h1>🗺️ Memory Map Game</h1>
+                <p>Remember where objects are located!</p>
+            </div>
+
+            <div class="game-board">
+                <!-- Instructions -->
+                <div class="instructions" id="instructions">
+                    <h3>🎯 How to Play:</h3>
+                    <ol>
+                        <li>Select a difficulty level</li>
+                        <li>Memorize the locations of objects in the room</li>
+                        <li>Objects will be hidden after the timer runs out</li>
+                        <li>Click on the cells where you remember objects were located</li>
+                        <li>Score points for correct placements!</li>
+                    </ol>
+                </div>
+
+                <!-- Difficulty Selector -->
+                <div class="difficulty-selector" id="difficulty-selector">
+                    <button class="difficulty-btn active" onclick="setDifficulty('easy')">
+                        Easy (4 objects)
+                    </button>
+                    <button class="difficulty-btn" onclick="setDifficulty('medium')">
+                        Medium (6 objects)
+                    </button>
+                    <button class="difficulty-btn" onclick="setDifficulty('hard')">
+                        Hard (8 objects)
+                    </button>
+                </div>
+
+                <!-- Stats Bar -->
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-label">Round</div>
+                        <div class="stat-value" id="round">1</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Score</div>
+                        <div class="stat-value" id="score">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Found</div>
+                        <div class="stat-value" id="found">0/<span id="total">0</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Accuracy</div>
+                        <div class="stat-value" id="accuracy">100%</div>
+                    </div>
+                </div>
+
+                <!-- Timer -->
+                <div class="timer-container" id="timer-container" style="display: none;">
+                    <div class="timer" id="timer">15</div>
+                    <p style="color: #64748b; margin-top: 0.5rem;">seconds to memorize</p>
+                </div>
+
+                <!-- Status Message -->
+                <div class="status-message" id="status">Select difficulty and click "Start Round" to begin!</div>
+
+                <!-- Object Legend -->
+                <div class="object-legend" id="legend" style="display: none;">
+                    <div class="legend-item">
+                        <span class="legend-icon">🪑</span>
+                        <span>Chair</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon">🛋️</span>
+                        <span>Couch</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon">🪴</span>
+                        <span>Plant</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon">💡</span>
+                        <span>Lamp</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon">📺</span>
+                        <span>TV</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon">🖼️</span>
+                        <span>Picture</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon">📚</span>
+                        <span>Books</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon">🕰️</span>
+                        <span>Clock</span>
+                    </div>
+                </div>
+
+                <!-- Room Grid -->
+                <div class="room-container">
+                    <div class="room-title" id="room-title">Living Room</div>
+                    <div class="grid" id="grid"></div>
+                </div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <button class="control-btn" id="start-btn" onclick="startRound()">
+                        ▶️ Start Round
+                    </button>
+                    <button class="control-btn" id="submit-btn" onclick="submitAnswers()" style="display: none;">
+                        ✓ Submit Answers
+                    </button>
+                    <button class="control-btn secondary" onclick="resetGame()">
+                        🔄 New Game
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Available objects
+        const objects = ['🪑', '🛋️', '🪴', '💡', '📺', '🖼️', '📚', '🕰️'];
+        
+        // Game state
+        let gameState = {
+            difficulty: 'easy',
+            round: 1,
+            score: 0,
+            objectPositions: [],
+            userSelections: [],
+            isMemorizing: false,
+            isPlaying: false,
+            timer: null,
+            timeRemaining: 15,
+            totalClicks: 0,
+            correctClicks: 0
+        };
+
+        const difficultySettings = {
+            easy: { objects: 4, time: 15, gridSize: 6 },
+            medium: { objects: 6, time: 12, gridSize: 6 },
+            hard: { objects: 8, time: 10, gridSize: 6 }
+        };
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('expanded');
+        }
+
+        function setDifficulty(level) {
+            gameState.difficulty = level;
+            
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function createGrid() {
+            const grid = document.getElementById('grid');
+            const settings = difficultySettings[gameState.difficulty];
+            grid.innerHTML = '';
+            
+            const totalCells = settings.gridSize * settings.gridSize;
+            
+            for (let i = 0; i < totalCells; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                cell.dataset.index = i;
+                cell.addEventListener('click', handleCellClick);
+                grid.appendChild(cell);
+            }
+        }
+
+        function placeObjects() {
+            const settings = difficultySettings[gameState.difficulty];
+            const totalCells = settings.gridSize * settings.gridSize;
+            gameState.objectPositions = [];
+            
+            // Randomly select positions for objects
+            const availablePositions = Array.from({length: totalCells}, (_, i) => i);
+            
+            for (let i = 0; i < settings.objects; i++) {
+                const randomIndex = Math.floor(Math.random() * availablePositions.length);
+                const position = availablePositions[randomIndex];
+                availablePositions.splice(randomIndex, 1);
+                
+                const objectType = objects[i % objects.length];
+                gameState.objectPositions.push({ position, object: objectType });
+                
+                // Place object in grid
+                const cell = document.querySelector(`[data-index="${position}"]`);
+                const objectSpan = document.createElement('span');
+                objectSpan.className = 'object';
+                objectSpan.textContent = objectType;
+                cell.appendChild(objectSpan);
+                cell.classList.add('has-object');
+            }
+        }
+
+let _gameStartTime = null;
+        function startRound() {
+            if (!_gameStartTime) _gameStartTime = performance.now();
+            const settings = difficultySettings[gameState.difficulty];
+            
+            // Hide instructions and difficulty selector
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('difficulty-selector').style.display = 'none';
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('legend').style.display = 'flex';
+            
+            // Create grid and place objects
+            createGrid();
+            placeObjects();
+            
+            // Start memorization timer
+            gameState.isMemorizing = true;
+            gameState.timeRemaining = settings.time;
+            document.getElementById('timer-container').style.display = 'block';
+            updateTimer();
+            
+            gameState.timer = setInterval(() => {
+                gameState.timeRemaining--;
+                updateTimer();
+                
+                if (gameState.timeRemaining <= 5) {
+                    document.getElementById('timer').classList.add('warning');
+                }
+                
+                if (gameState.timeRemaining <= 0) {
+                    clearInterval(gameState.timer);
+                    hideObjects();
+                }
+            }, 1000);
+            
+            document.getElementById('status').textContent = 'Memorize the object locations!';
+            updateDisplay();
+        }
+
+        function updateTimer() {
+            document.getElementById('timer').textContent = gameState.timeRemaining;
+        }
+
+        function hideObjects() {
+            gameState.isMemorizing = false;
+            gameState.isPlaying = true;
+            gameState.userSelections = [];
+            gameState.totalClicks = 0;
+            
+            // Hide all objects
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.classList.add('hidden');
+                cell.classList.remove('has-object');
+            });
+            
+            document.getElementById('timer-container').style.display = 'none';
+            document.getElementById('submit-btn').style.display = 'inline-flex';
+            document.getElementById('status').textContent = 'Click where you remember the objects!';
+        }
+
+        function handleCellClick(event) {
+            if (!gameState.isPlaying) return;
+            
+            const cell = event.currentTarget;
+            const index = parseInt(cell.dataset.index);
+            
+            // Toggle selection
+            if (gameState.userSelections.includes(index)) {
+                gameState.userSelections = gameState.userSelections.filter(i => i !== index);
+                cell.style.background = 'white';
+                cell.style.borderColor = '#e2e8f0';
+            } else {
+                gameState.userSelections.push(index);
+                cell.style.background = 'linear-gradient(135deg, #dbeafe, #bfdbfe)';
+                cell.style.borderColor = '#3b82f6';
+            }
+            
+            updateDisplay();
+        }
+
+        function submitAnswers() {
+            gameState.isPlaying = false;
+            document.getElementById('submit-btn').disabled = true;
+            
+            let correctCount = 0;
+            const settings = difficultySettings[gameState.difficulty];
+            
+            // Check each user selection
+            gameState.userSelections.forEach(selection => {
+                gameState.totalClicks++;
+                const cell = document.querySelector(`[data-index="${selection}"]`);
+                const isCorrect = gameState.objectPositions.some(obj => obj.position === selection);
+                
+                if (isCorrect) {
+                    correctCount++;
+                    gameState.correctClicks++;
+                    cell.classList.add('correct');
+                } else {
+                    cell.classList.add('incorrect');
+                }
+            });
+            
+            // Reveal missed objects
+            gameState.objectPositions.forEach(obj => {
+                const cell = document.querySelector(`[data-index="${obj.position}"]`);
+                cell.classList.remove('hidden');
+                if (!gameState.userSelections.includes(obj.position)) {
+                    cell.classList.add('revealed');
+                }
+            });
+            
+            // Calculate score
+            const pointsEarned = correctCount * 10;
+            gameState.score += pointsEarned;
+            
+            // Update status
+            if (correctCount === settings.objects && gameState.userSelections.length === settings.objects) {
+                document.getElementById('status').textContent = `🎉 Perfect! +${pointsEarned} points!`;
+                document.getElementById('status').className = 'status-message success';
+            } else {
+                document.getElementById('status').textContent = `Found ${correctCount}/${settings.objects} objects. +${pointsEarned} points`;
+                document.getElementById('status').className = 'status-message';
+            }
+            
+            updateDisplay();
+            
+            // Show next round button after delay
+            setTimeout(() => {
+                gameState.round++;
+                const MAX_ROUNDS = 5;
+                if (gameState.round > MAX_ROUNDS) {
+                    // All rounds done — save final accumulated score
+                    fetch('/save_score', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ game_name: 'Memory Map', score: gameState.score, rounds_played: MAX_ROUNDS, total_rounds: MAX_ROUNDS, time_taken_ms: Math.round(performance.now() - _gameStartTime) })
+                    }).catch(() => {});
+                    document.getElementById('status').textContent = `🏆 All rounds complete! Final Score: ${gameState.score}`;
+                    document.getElementById('status').className = 'status-message success';
+                    return;
+                }
+                document.getElementById('start-btn').disabled = false;
+                document.getElementById('submit-btn').style.display = 'none';
+                document.getElementById('submit-btn').disabled = false;
+                document.getElementById('status').textContent = `Round ${gameState.round}/${MAX_ROUNDS} — Ready?`;
+            }, 3000);
+        }
+
+        function resetGame() {
+            clearInterval(gameState.timer);
+            
+            gameState = {
+                difficulty: gameState.difficulty,
+                round: 1,
+                score: 0,
+                objectPositions: [],
+                userSelections: [],
+                isMemorizing: false,
+                isPlaying: false,
+                timer: null,
+                timeRemaining: 15,
+                totalClicks: 0,
+                correctClicks: 0
+            };
+            
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('difficulty-selector').style.display = 'flex';
+            document.getElementById('timer-container').style.display = 'none';
+            document.getElementById('legend').style.display = 'none';
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').classList.remove('warning');
+            document.getElementById('status').textContent = 'Select difficulty and click "Start Round" to begin!';
+            document.getElementById('status').className = 'status-message';
+            
+            createGrid();
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const settings = difficultySettings[gameState.difficulty];
+            document.getElementById('round').textContent = `${gameState.round}/5`;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('found').innerHTML = `${gameState.userSelections.length}/<span id="total">${settings.objects}</span>`;
+            
+            const accuracy = gameState.totalClicks > 0 
+                ? Math.round((gameState.correctClicks / gameState.totalClicks) * 100)
+                : 100;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+            const toggle = document.querySelector('.sidebar-toggle');
+            if (window.innerWidth <= 768 && sidebar.classList.contains('expanded') &&
+                !sidebar.contains(e.target) && toggle && !toggle.contains(e.target)) {
+                sidebar.classList.remove('expanded');
+            }
+        });
+
+        // Initialize
+        createGrid();
+        updateDisplay();
+    </script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body>
+</html>

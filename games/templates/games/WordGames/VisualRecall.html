@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Name That Object</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .game-area {
+            margin-bottom: 30px;
+        }
+
+        .object-emoji {
+            font-size: 8rem;
+            margin: 20px auto;
+            display: block;
+            text-align: center;
+            transition: transform 0.3s ease;
+            text-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+
+        .object-emoji:hover {
+            transform: scale(1.1);
+        }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .option-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .option-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .option-button:active {
+            transform: translateY(0);
+        }
+
+        .option-button.correct {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            animation: pulse 0.6s;
+        }
+
+        .option-button.wrong {
+            background: linear-gradient(45deg, #dc3545, #fd7e14);
+            animation: shake 0.6s;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .feedback {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 20px 0;
+            min-height: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .feedback.correct {
+            color: #28a745;
+        }
+
+        .feedback.wrong {
+            color: #dc3545;
+        }
+
+        .next-button {
+            background: linear-gradient(45deg, #ffc107, #fd7e14);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .next-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .restart-button {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .restart-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .game-complete {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            background: rgba(40, 167, 69, 0.1);
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .complete-title {
+            font-size: 2em;
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+
+        .final-score {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+
+<body>
+    <div class="game-container">
+        <h1 class="game-title">🎯 Name That Object</h1>
+        <p class="game-subtitle">Can you identify the object in the picture?</p>
+
+        <div class="score-board">
+            <div class="score-item">
+                <div class="score-label">Score</div>
+                <div class="score-value" id="score">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Question</div>
+                <div class="score-value" id="question-counter">1/10</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Streak</div>
+                <div class="score-value" id="streak">0</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div id="object-emoji" class="object-emoji">🍎</div>
+
+            <div class="options-container" id="options-container">
+                <!-- Options will be generated here -->
+            </div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <button class="next-button" id="next-button" onclick="nextQuestion()">Next Question</button>
+        </div>
+
+        <div class="game-complete" id="game-complete">
+            <h2 class="complete-title">🎉 Game Complete!</h2>
+            <p class="final-score" id="final-score"></p>
+            <button class="restart-button" onclick="restartGame()">Play Again</button>
+        </div>
+
+        <button class="restart-button" onclick="restartGame()">Restart Game</button>
+    </div>
+
+    <script>
+        // Game data with emojis
+        const gameData = [
+            {
+                emoji: "🍎",
+                correct: "Apple",
+                options: ["Apple", "Orange", "Tomato", "Cherry"]
+            },
+            {
+                emoji: "💻",
+                correct: "Computer",
+                options: ["Computer", "Television", "Laptop", "Phone"]
+            },
+            {
+                emoji: "☕",
+                correct: "Coffee",
+                options: ["Coffee", "Tea", "Hot Chocolate", "Juice"]
+            },
+            {
+                emoji: "📱",
+                correct: "Phone",
+                options: ["Phone", "Remote", "Calculator", "Tablet"]
+            },
+            {
+                emoji: "📚",
+                correct: "Book",
+                options: ["Book", "Notebook", "Magazine", "Newspaper"]
+            },
+            {
+                emoji: "🌞",
+                correct: "Sun",
+                options: ["Sun", "Star", "Moon", "Light"]
+            },
+            {
+                emoji: "🏠",
+                correct: "House",
+                options: ["House", "Building", "Castle", "Barn"]
+            },
+            {
+                emoji: "🚗",
+                correct: "Car",
+                options: ["Car", "Truck", "Bus", "Taxi"]
+            },
+            {
+                emoji: "🎾",
+                correct: "Tennis Ball",
+                options: ["Tennis Ball", "Baseball", "Golf Ball", "Basketball"]
+            },
+            {
+                emoji: "🌳",
+                correct: "Tree",
+                options: ["Tree", "Plant", "Bush", "Flower"]
+            },
+            {
+                emoji: "🐶",
+                correct: "Dog",
+                options: ["Dog", "Cat", "Wolf", "Fox"]
+            },
+            {
+                emoji: "🍕",
+                correct: "Pizza",
+                options: ["Pizza", "Burger", "Sandwich", "Pasta"]
+            },
+            {
+                emoji: "🎵",
+                correct: "Music Note",
+                options: ["Music Note", "Sound", "Song", "Melody"]
+            },
+            {
+                emoji: "⚽",
+                correct: "Soccer Ball",
+                options: ["Soccer Ball", "Football", "Basketball", "Volleyball"]
+            },
+            {
+                emoji: "🌈",
+                correct: "Rainbow",
+                options: ["Rainbow", "Sky", "Cloud", "Bridge"]
+            },
+            {
+                emoji: "🎂",
+                correct: "Cake",
+                options: ["Cake", "Cupcake", "Pie", "Cookie"]
+            },
+            {
+                emoji: "🦋",
+                correct: "Butterfly",
+                options: ["Butterfly", "Moth", "Bee", "Dragonfly"]
+            },
+            {
+                emoji: "🌺",
+                correct: "Flower",
+                options: ["Flower", "Rose", "Tulip", "Sunflower"]
+            },
+            {
+                emoji: "🍌",
+                correct: "Banana",
+                options: ["Banana", "Corn", "Lemon", "Pepper"]
+            },
+            {
+                emoji: "🏆",
+                correct: "Trophy",
+                options: ["Trophy", "Cup", "Medal", "Award"]
+            },
+            {
+                emoji: "🐘",
+                correct: "Elephant",
+                options: ["Elephant", "Hippo", "Rhino", "Giraffe"]
+            },
+            {
+                emoji: "🚀",
+                correct: "Rocket",
+                options: ["Rocket", "Spaceship", "Plane", "Missile"]
+            },
+            {
+                emoji: "🎸",
+                correct: "Guitar",
+                options: ["Guitar", "Violin", "Ukulele", "Banjo"]
+            },
+            {
+                emoji: "🌋",
+                correct: "Volcano",
+                options: ["Volcano", "Mountain", "Cave", "Island"]
+            },
+            {
+                emoji: "🕶️",
+                correct: "Sunglasses",
+                options: ["Sunglasses", "Glasses", "Binoculars", "Goggles"]
+            },
+            {
+                emoji: "🐢",
+                correct: "Turtle",
+                options: ["Turtle", "Tortoise", "Lizard", "Frog"]
+            },
+            {
+                emoji: "🧊",
+                correct: "Ice",
+                options: ["Ice", "Crystal", "Glass", "Gem"]
+            }
+        ];
+
+        let currentQuestion = 0;
+const sessionTimer = createGameTimer();
+let bestStreak = 0;
+        let score = 0;
+        let streak = 0;
+        let gameQuestions = [];
+        let answered = false;
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function initGame() {
+ if(!sessionTimer._started){sessionTimer.start(); sessionTimer._started=true;}
+            currentQuestion = 0;
+            score = 0;
+            streak = 0;
+            answered = false;
+            gameQuestions = shuffleArray(gameData).slice(0, 10);
+            document.getElementById('game-complete').style.display = 'none';
+            document.querySelector('.game-area').style.display = 'block';
+            updateScore();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestion >= gameQuestions.length) {
+                endGame();
+                return;
+            }
+
+            const question = gameQuestions[currentQuestion];
+            const emojiElement = document.getElementById('object-emoji');
+            emojiElement.textContent = question.emoji;
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            const shuffledOptions = shuffleArray(question.options);
+
+            shuffledOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-button';
+                button.textContent = option;
+                button.onclick = () => selectOption(option, question.correct);
+                optionsContainer.appendChild(button);
+            });
+
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('feedback').className = 'feedback';
+            document.getElementById('next-button').style.display = 'none';
+            answered = false;
+        }
+
+        function selectOption(selected, correct) {
+            if (answered) return;
+
+            answered = true;
+            const buttons = document.querySelectorAll('.option-button');
+
+            buttons.forEach(button => {
+                button.disabled = true;
+                if (button.textContent === correct) {
+                    button.className = 'option-button correct';
+                } else if (button.textContent === selected && selected !== correct) {
+                    button.className = 'option-button wrong';
+                }
+            });
+
+            const feedback = document.getElementById('feedback');
+            if (selected === correct) {
+                score += 10;
+                streak++;
+ bestStreak = Math.max(bestStreak, streak);
+                feedback.textContent = `Correct! Great job! 🎉`;
+                feedback.className = 'feedback correct';
+                if (streak > 1) {
+                    feedback.textContent += ` Streak: ${streak}!`;
+                }
+            } else {
+                streak = 0;
+                feedback.textContent = `Wrong! The correct answer was "${correct}" 😔`;
+                feedback.className = 'feedback wrong';
+            }
+
+            updateScore();
+            document.getElementById('next-button').style.display = 'inline-block';
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            loadQuestion();
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('question-counter').textContent = `${currentQuestion + 1}/${gameQuestions.length}`;
+            document.getElementById('streak').textContent = streak;
+        }
+
+        function endGame() {
+ const _doneNow = performance.now();
+            document.querySelector('.game-area').style.display = 'none';
+            const gameComplete = document.getElementById('game-complete');
+            gameComplete.style.display = 'block';
+
+            const percentage = Math.round((score / (gameQuestions.length * 10)) * 100);
+            let message = '';
+
+            if (percentage >= 90) {
+                message = 'Outstanding! You\'re an object identification expert! 🌟';
+            } else if (percentage >= 70) {
+                message = 'Great job! You have excellent observation skills! 👏';
+            } else if (percentage >= 50) {
+                message = 'Good effort! Keep practicing to improve! 👍';
+            } else {
+                message = 'Keep trying! Practice makes perfect! 💪';
+            }
+
+            document.getElementById('final-score').innerHTML = `
+                Your final score: ${score}/${gameQuestions.length * 10} (${percentage}%)<br>
+                ${message}
+            `;
+        }
+
+        function restartGame() {
+            initGame();
+        }
+
+        // Initialize the game when page loads
+        window.onload = initGame;
+    </script>
+<script>
+// === NeuroSense common helpers (visual recall) ===
+function createGameTimer(){let s=null;return{start(){s=performance.now()},stop(){if(s===null) return 0;const e=performance.now()-s;s=null;return Math.round(e)}}}
+async function postScore({gameName,score,timeTakenMs,mode='limit-rounds',roundsPlayed=null,totalRounds=null,extra=null}){try{const payload={game_name:gameName,score:score,time_taken_ms:timeTakenMs,mode:mode,rounds_played: roundsPlayed, total_rounds: roundsPlayed,extra:extra};if(totalRounds!==null){payload.total_rounds=totalRounds;}const res=await fetch('/save_score',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(payload)});const data=await res.json();if(!res.ok){console.error('Save failed:',data);alert('Could not save your result.');}return data}catch(err){console.error('Save error:',err);alert('Could not save your result.');return null}}
+ async function finishSession(accuracy){
+   const elapsed = sessionTimer.stop();
+   await postScore({
+     gameName: 'Visual-NameThatObject',
+     score: score,
+     timeTakenMs: elapsed,
+     roundsPlayed: gameQuestions.length,
+     totalRounds: gameQuestions.length,
+     extra: {accuracy: accuracy, best_streak: bestStreak}
+   });
+   window.location.href = '/progress';
+ }
+</script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+
+<script>
+// Save score on page unload (handles tab close / navigation away)
+window.addEventListener('beforeunload', function() {
+  const _score = (function(){ try{ return score; }catch(e){ return 0; } })();
+  if (_score > 0) {
+    navigator.sendBeacon('/save_score', JSON.stringify({
+      game_name: 'Visual-NameThatObject',
+      score: _score,
+      time_taken_ms: _gameStartTime ? Math.round(performance.now() - _gameStartTime) : null
+    }));
+  }
+});
+</script>
+</body></html>

@@ -1,0 +1,15 @@
+Flask>=2.3,<4.0
+pymongo>=4.0
+bcrypt>=4.0
+flask-cors>=4.0
+flask-session>=0.5
+certifi
+python-dotenv
+numpy
+# torch and torchvision are required for MRI analysis.
+# Install CPU-only builds (smaller, works everywhere):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+# Or GPU builds: pip install torch torchvision
+torch
+torchvision
+Pillow

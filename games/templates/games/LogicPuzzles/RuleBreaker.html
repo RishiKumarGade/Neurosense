@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rule Breaker – NeuroSense</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink-deep: #be185d;
+    --pink-bright: #db2777;
+    --pink-light: #f9a8d4;
+    --pink-pale: #fdf2f8;
+    --pink-mid: #fce7f3;
+    --white: #ffffff;
+    --slate: #1e293b;
+    --muted: #64748b;
+    --success: #10b981;
+    --error: #ef4444;
+    --warning: #f59e0b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--pink-pale);
+    min-height: 100vh;
+    color: var(--slate);
+    overflow-x: hidden;
+  }
+
+  /* Background mesh */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 10%, rgba(219,39,119,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 90%, rgba(190,24,93,0.10) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 60% 30%, rgba(249,168,212,0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--white);
+    box-shadow: 0 2px 16px rgba(190,24,93,0.10);
+    padding: 1rem 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 900; color: var(--pink-deep); letter-spacing: -0.02em; }
+  .logo span { color: var(--pink-bright); }
+  .badge {
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    color: white;
+    padding: 0.35rem 1rem;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* MAIN WRAPPER */
+  .wrapper {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+    position: relative; z-index: 1;
+  }
+
+  /* TITLE SECTION */
+  .title-block {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s ease both;
+  }
+  .title-block h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5vw, 3rem);
+    font-weight: 900;
+    color: var(--slate);
+    line-height: 1.1;
+    margin-bottom: 0.6rem;
+  }
+  .title-block h1 em { color: var(--pink-bright); font-style: normal; }
+  .title-block p { color: var(--muted); font-size: 1rem; font-weight: 400; }
+
+  /* SCORE BAR */
+  .score-bar {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 1.4rem 2rem;
+    box-shadow: 0 4px 24px rgba(190,24,93,0.08);
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.7s 0.1s ease both;
+    flex-wrap: wrap;
+  }
+  .score-item { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; min-width: 70px; }
+  .score-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .score-value { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: var(--pink-deep); line-height: 1; }
+  .score-value.turn-score { color: var(--slate); font-size: 1.4rem; }
+
+  .overall-meter {
+    flex: 1;
+    min-width: 200px;
+  }
+  .meter-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; display: flex; justify-content: space-between; }
+  .meter-label span { color: var(--pink-deep); font-size: 1rem; }
+  .meter-track {
+    height: 12px;
+    background: var(--pink-mid);
+    border-radius: 100px;
+    overflow: hidden;
+    position: relative;
+  }
+  .meter-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--pink-bright), var(--pink-deep));
+    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    width: 0%;
+    position: relative;
+  }
+  .meter-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 6px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 100px;
+    animation: pulse-glow 1.5s infinite;
+  }
+
+  /* GAME CARD */
+  .game-card {
+    background: var(--white);
+    border-radius: 24px;
+    box-shadow: 0 8px 40px rgba(190,24,93,0.10);
+    overflow: hidden;
+    animation: fadeUp 0.8s 0.15s ease both;
+    border: 1.5px solid rgba(219,39,119,0.08);
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-header .turn-pill {
+    background: rgba(255,255,255,0.22);
+    color: white;
+    padding: 0.3rem 0.9rem;
+    border-radius: 100px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .card-header .rule-tag {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 0.3rem 0.9rem;
+    border-radius: 100px;
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+
+  .card-body { padding: 2.5rem 2rem; }
+
+  /* RULE DISPLAY */
+  .rule-display {
+    background: var(--pink-pale);
+    border: 1.5px solid var(--pink-mid);
+    border-radius: 16px;
+    padding: 1.4rem 1.8rem;
+    margin-bottom: 2rem;
+  }
+  .rule-display .rule-title {
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--pink-bright); margin-bottom: 0.6rem;
+  }
+  .rule-display .rule-text {
+    font-size: 1.05rem; font-weight: 500; color: var(--slate); line-height: 1.55;
+  }
+  .rule-display .rule-text strong { color: var(--pink-deep); }
+
+  /* SEQUENCE */
+  .sequence-label {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); margin-bottom: 1rem;
+  }
+  .sequence-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+  .seq-item {
+    background: var(--pink-pale);
+    border: 1.5px solid var(--pink-mid);
+    border-radius: 14px;
+    padding: 1rem 0.5rem;
+    text-align: center;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    user-select: none;
+  }
+  .seq-item:hover { border-color: var(--pink-bright); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(219,39,119,0.15); }
+  .seq-item.selected { border-color: var(--pink-bright); background: var(--pink-mid); transform: scale(1.04); }
+  .seq-item.correct { border-color: var(--success); background: #d1fae5; animation: bounce 0.4s ease; }
+  .seq-item.wrong { border-color: var(--error); background: #fee2e2; animation: shake 0.4s ease; }
+  .seq-item .item-index {
+    position: absolute; top: 6px; left: 9px;
+    font-size: 0.62rem; font-weight: 700; color: var(--muted);
+  }
+  .seq-item .item-content { font-size: 1.6rem; margin-bottom: 0.3rem; }
+  .seq-item .item-label { font-size: 0.78rem; font-weight: 600; color: var(--slate); }
+
+  /* CHOICES */
+  .choices-label {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); margin-bottom: 0.9rem;
+  }
+  .choices-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+    margin-bottom: 2rem;
+  }
+  .choice-btn {
+    background: var(--white);
+    border: 1.5px solid var(--pink-mid);
+    border-radius: 14px;
+    padding: 0.95rem 1.2rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--slate);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .choice-btn .choice-letter {
+    width: 28px; height: 28px;
+    background: var(--pink-mid);
+    color: var(--pink-deep);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.82rem; font-weight: 700;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .choice-btn:hover { border-color: var(--pink-bright); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(219,39,119,0.12); }
+  .choice-btn:hover .choice-letter { background: var(--pink-bright); color: white; }
+  .choice-btn.selected { border-color: var(--pink-bright); background: var(--pink-pale); }
+  .choice-btn.correct { border-color: var(--success); background: #d1fae5; }
+  .choice-btn.correct .choice-letter { background: var(--success); color: white; }
+  .choice-btn.wrong { border-color: var(--error); background: #fee2e2; }
+  .choice-btn.wrong .choice-letter { background: var(--error); color: white; }
+  .choice-btn:disabled { cursor: not-allowed; transform: none; }
+
+  /* SUBMIT */
+  .submit-row { display: flex; gap: 1rem; align-items: center; }
+  .btn-submit {
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    color: white;
+    border: none;
+    padding: 0.9rem 2.2rem;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 16px rgba(219,39,119,0.3);
+  }
+  .btn-submit:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(219,39,119,0.4); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-skip {
+    background: none; border: 1.5px solid var(--pink-light);
+    color: var(--pink-deep); padding: 0.9rem 1.5rem; border-radius: 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.92rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-skip:hover { background: var(--pink-mid); }
+
+  /* FEEDBACK PANEL */
+  .feedback-panel {
+    border-radius: 16px;
+    padding: 1.5rem 1.8rem;
+    margin-top: 1.5rem;
+    display: none;
+    animation: fadeUp 0.4s ease both;
+  }
+  .feedback-panel.show { display: block; }
+  .feedback-panel.correct-fb { background: #d1fae5; border: 1.5px solid var(--success); }
+  .feedback-panel.wrong-fb { background: #fee2e2; border: 1.5px solid var(--error); }
+  .feedback-panel .fb-icon { font-size: 1.6rem; margin-bottom: 0.4rem; }
+  .feedback-panel .fb-title { font-size: 1rem; font-weight: 700; color: var(--slate); margin-bottom: 0.3rem; }
+  .feedback-panel .fb-explain { font-size: 0.9rem; color: var(--muted); line-height: 1.55; }
+  .feedback-panel .fb-score {
+    margin-top: 0.75rem;
+    font-size: 0.85rem; font-weight: 600;
+    color: var(--pink-deep);
+    background: rgba(190,24,93,0.08);
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 100px;
+  }
+
+  /* NEXT BTN */
+  .btn-next {
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    color: white; border: none;
+    padding: 0.75rem 1.8rem; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; margin-top: 1rem;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 14px rgba(219,39,119,0.28);
+    display: none;
+  }
+  .btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(219,39,119,0.38); }
+  .btn-next.show { display: inline-block; }
+
+  /* END SCREEN */
+  .end-screen {
+    display: none;
+    text-align: center;
+    padding: 3rem 2rem;
+    animation: fadeUp 0.6s ease both;
+  }
+  .end-screen.show { display: block; }
+  .end-screen .trophy { font-size: 4.5rem; margin-bottom: 1rem; }
+  .end-screen h2 { font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 900; color: var(--slate); margin-bottom: 0.5rem; }
+  .end-screen .final-pct {
+    font-family: 'Playfair Display', serif;
+    font-size: 5rem; font-weight: 900;
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; line-height: 1;
+    margin: 0.75rem 0;
+  }
+  .end-screen .end-msg { font-size: 1rem; color: var(--muted); margin-bottom: 2rem; }
+  .end-stats { display: flex; justify-content: center; gap: 2.5rem; margin: 1.5rem 0; flex-wrap: wrap; }
+  .end-stat { text-align: center; }
+  .end-stat .es-val { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--pink-deep); }
+  .end-stat .es-lbl { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 0.2rem; }
+  .btn-restart {
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    color: white; border: none; padding: 1rem 2.5rem; border-radius: 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 6px 20px rgba(219,39,119,0.3);
+  }
+  .btn-restart:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(219,39,119,0.4); }
+
+  /* TURN SCORE BADGE */
+  .turn-score-badge {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    color: white; font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 900;
+    padding: 1rem 2.5rem; border-radius: 20px;
+    box-shadow: 0 16px 50px rgba(219,39,119,0.4);
+    z-index: 999; pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+    opacity: 0;
+  }
+  .turn-score-badge.pop { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes bounce {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  @keyframes pulse-glow {
+    0%,100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  .progress-dots {
+    display: flex; gap: 0.5rem; align-items: center;
+  }
+  .p-dot {
+    width: 10px; height: 10px; border-radius: 100px;
+    background: var(--pink-mid); transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+  .p-dot.done { background: var(--success); }
+  .p-dot.wrong-dot { background: var(--error); }
+  .p-dot.current { background: var(--pink-bright); width: 22px; }
+
+  @media (max-width: 560px) {
+    .choices-grid { grid-template-columns: 1fr; }
+    .sequence-grid { grid-template-columns: repeat(3, 1fr); }
+    .card-body { padding: 1.5rem 1rem; }
+    .score-bar { gap: 1rem; }
+  }
+</style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+<div style='padding:10px 20px;background:white;border-bottom:1px solid #e2e8f0'><a href='/logic-puzzles' style='color:#be185d;text-decoration:none;font-weight:600;font-size:.9rem'> Back to Logic Puzzles</a></div>
+
+
+<header class="header">
+  <div class="logo">Neuro<span>Sense</span></div>
+  <div class="badge">Rule Breaker</div>
+</header>
+
+<div class="wrapper">
+  <div class="title-block">
+    <h1>Rule <em>Breaker</em></h1>
+    <p>Find which item violates the rule — and name the violation.</p>
+  </div>
+
+  <!-- Score Bar -->
+  <div class="score-bar">
+    <div class="score-item">
+      <div class="score-label">Turn</div>
+      <div class="score-value" id="turnDisplay">1</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">Correct</div>
+      <div class="score-value" id="correctCount">0</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">This Turn</div>
+      <div class="score-value turn-score" id="turnScoreDisplay">—</div>
+    </div>
+    <div class="overall-meter">
+      <div class="meter-label">
+        <span>Overall Score</span>
+        <span id="pctLabel">0%</span>
+      </div>
+      <div class="meter-track">
+        <div class="meter-fill" id="meterFill"></div>
+      </div>
+    </div>
+    <div class="progress-dots" id="progressDots"></div>
+  </div>
+
+  <!-- Game Card -->
+  <div class="game-card" id="gameCard">
+    <div class="card-header">
+      <span class="turn-pill" id="turnPill">Turn 1 of 8</span>
+      <span class="rule-tag" id="categoryTag">Category</span>
+    </div>
+    <div class="card-body" id="cardBody">
+
+      <div class="rule-display">
+        <div class="rule-title">📋 The Rule</div>
+        <div class="rule-text" id="ruleText">Loading…</div>
+      </div>
+
+      <div class="sequence-label">🔢 Identify the Odd One Out</div>
+      <div class="sequence-grid" id="sequenceGrid"></div>
+
+      <div class="choices-label">🎯 What rule is violated?</div>
+      <div class="choices-grid" id="choicesGrid"></div>
+
+      <div class="submit-row">
+        <button class="btn-submit" id="btnSubmit" onclick="submitAnswer()">Confirm Answer</button>
+        <button class="btn-skip" onclick="skipTurn()">Skip</button>
+      </div>
+
+      <div class="feedback-panel" id="feedbackPanel">
+        <div class="fb-icon" id="fbIcon"></div>
+        <div class="fb-title" id="fbTitle"></div>
+        <div class="fb-explain" id="fbExplain"></div>
+        <div class="fb-score" id="fbScore"></div>
+        <button class="btn-next" id="btnNext" onclick="nextTurn()">Next Round →</button>
+      </div>
+
+    </div>
+
+    <!-- End Screen -->
+    <div class="end-screen" id="endScreen">
+      <div class="trophy" id="trophyIcon">🧠</div>
+      <h2 id="endTitle">Session Complete!</h2>
+      <div class="final-pct" id="finalPct">0%</div>
+      <p class="end-msg" id="endMsg">Here's how you did:</p>
+      <div class="end-stats">
+        <div class="end-stat"><div class="es-val" id="esCorrect">0</div><div class="es-lbl">Correct</div></div>
+        <div class="end-stat"><div class="es-val" id="esTotal">0</div><div class="es-lbl">Total Rounds</div></div>
+        <div class="end-stat"><div class="es-val" id="esBest">—</div><div class="es-lbl">Best Turn %</div></div>
+      </div>
+      <button class="btn-restart" onclick="restartGame()">Play Again 🔁</button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating turn score -->
+<div class="turn-score-badge" id="turnBadge"></div>
+
+<script>
+// ============================
+// QUESTION BANK
+// ============================
+const questions = [
+  {
+    category: "Numbers",
+    rule: "All numbers must be <strong>even</strong>.",
+    items: [
+      { emoji: "2️⃣", label: "2" },
+      { emoji: "4️⃣", label: "4" },
+      { emoji: "7️⃣", label: "7" },
+      { emoji: "8️⃣", label: "8" },
+      { emoji: "6️⃣", label: "6" },
+    ],
+    oddIndex: 2,
+    choices: ["Not divisible by 2", "Not a prime number", "Not a single digit", "Not positive"],
+    correctChoice: 0,
+    explanation: "7 is odd — it cannot be divided evenly by 2, breaking the 'all even' rule."
+  },
+  {
+    category: "Colors",
+    rule: "All items must be <strong>primary colors</strong> (red, blue, yellow).",
+    items: [
+      { emoji: "🔴", label: "Red" },
+      { emoji: "🟡", label: "Yellow" },
+      { emoji: "🟢", label: "Green" },
+      { emoji: "🔵", label: "Blue" },
+    ],
+    oddIndex: 2,
+    choices: ["Not a warm color", "Not a primary color", "Not found in a rainbow", "Too bright"],
+    correctChoice: 1,
+    explanation: "Green is a secondary color made by mixing blue and yellow — it's not a primary color."
+  },
+  {
+    category: "Animals",
+    rule: "All animals must be <strong>mammals</strong>.",
+    items: [
+      { emoji: "🐘", label: "Elephant" },
+      { emoji: "🐊", label: "Crocodile" },
+      { emoji: "🐋", label: "Whale" },
+      { emoji: "🦁", label: "Lion" },
+      { emoji: "🐄", label: "Cow" },
+    ],
+    oddIndex: 1,
+    choices: ["Not a warm-blooded animal", "Not a vertebrate", "Not a mammal", "Lives only in water"],
+    correctChoice: 2,
+    explanation: "Crocodiles are reptiles, not mammals. They lay eggs and are cold-blooded."
+  },
+  {
+    category: "Shapes",
+    rule: "All shapes must have <strong>exactly 4 sides</strong>.",
+    items: [
+      { emoji: "🟦", label: "Square" },
+      { emoji: "🔷", label: "Rectangle" },
+      { emoji: "⬛", label: "Rhombus" },
+      { emoji: "🔺", label: "Triangle" },
+      { emoji: "🟧", label: "Trapezoid" },
+    ],
+    oddIndex: 3,
+    choices: ["Not a polygon", "Has fewer than 4 sides", "Has more than 4 sides", "Not symmetrical"],
+    correctChoice: 1,
+    explanation: "A triangle has only 3 sides, violating the rule that all shapes must have exactly 4."
+  },
+  {
+    category: "Fruits",
+    rule: "All fruits must <strong>grow on trees</strong>.",
+    items: [
+      { emoji: "🍎", label: "Apple" },
+      { emoji: "🍊", label: "Orange" },
+      { emoji: "🍓", label: "Strawberry" },
+      { emoji: "🍒", label: "Cherry" },
+      { emoji: "🥭", label: "Mango" },
+    ],
+    oddIndex: 2,
+    choices: ["Not a fruit", "Grows underground", "Grows on a bush/ground plant", "Is not red"],
+    correctChoice: 2,
+    explanation: "Strawberries grow on low ground plants, not trees — unlike apples, oranges, cherries, and mangoes."
+  },
+  {
+    category: "Planets",
+    rule: "All planets listed must be in the <strong>inner solar system</strong> (Mercury to Mars).",
+    items: [
+      { emoji: "☿", label: "Mercury" },
+      { emoji: "♀", label: "Venus" },
+      { emoji: "🌍", label: "Earth" },
+      { emoji: "♂", label: "Mars" },
+      { emoji: "♃", label: "Jupiter" },
+    ],
+    oddIndex: 4,
+    choices: ["Not a planet", "Not in our solar system", "Is an outer planet", "Has no moons"],
+    correctChoice: 2,
+    explanation: "Jupiter is the 5th planet and belongs to the outer solar system, beyond the asteroid belt."
+  },
+  {
+    category: "Words",
+    rule: "All words must be <strong>nouns</strong>.",
+    items: [
+      { emoji: "📚", label: "Book" },
+      { emoji: "🏠", label: "House" },
+      { emoji: "⚡", label: "Run" },
+      { emoji: "🌊", label: "Ocean" },
+      { emoji: "🪑", label: "Chair" },
+    ],
+    oddIndex: 2,
+    choices: ["It is an adjective", "It is a verb", "It is a pronoun", "It is an adverb"],
+    correctChoice: 1,
+    explanation: "'Run' is a verb (an action word), not a noun. All other words are people, places, or things."
+  },
+  {
+    category: "Math",
+    rule: "All numbers must be <strong>multiples of 3</strong>.",
+    items: [
+      { emoji: "3️⃣", label: "3" },
+      { emoji: "9️⃣", label: "9" },
+      { emoji: "🔢", label: "12" },
+      { emoji: "💯", label: "10" },
+      { emoji: "✨", label: "21" },
+    ],
+    oddIndex: 3,
+    choices: ["Not divisible by 3", "Not a two-digit number", "Not an integer", "Not positive"],
+    correctChoice: 0,
+    explanation: "10 ÷ 3 = 3.33…, so 10 is not a multiple of 3. All others (3, 9, 12, 21) divide evenly by 3."
+  }
+];
+
+// ============================
+// GAME STATE
+// ============================
+let currentTurn = 0;
+let score = 0;
+let turnScores = [];
+let selectedItem = null;
+let selectedChoice = null;
+let answered = false;
+const TOTAL = questions.length;
+
+// ============================
+// INIT
+// ============================
+function init() {
+  buildProgressDots();
+  loadTurn();
+}
+
+function buildProgressDots() {
+  const c = document.getElementById('progressDots');
+  c.innerHTML = '';
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'p-dot' + (i === 0 ? ' current' : '');
+    d.id = `dot-${i}`;
+    c.appendChild(d);
+  }
+}
+
+function updateProgressDots(result) {
+  const curr = document.getElementById(`dot-${currentTurn}`);
+  if (curr) curr.className = 'p-dot ' + (result ? 'done' : 'wrong-dot');
+  const next = document.getElementById(`dot-${currentTurn + 1}`);
+  if (next) next.classList.add('current');
+}
+
+let _gameStartTime = null;
+function loadTurn() {
+  if (!_gameStartTime) _gameStartTime = performance.now();
+  answered = false;
+  selectedItem = null;
+  selectedChoice = null;
+
+  const q = questions[currentTurn];
+  document.getElementById('turnDisplay').textContent = currentTurn + 1;
+  document.getElementById('turnPill').textContent = `Turn ${currentTurn + 1} of ${TOTAL}`;
+  document.getElementById('categoryTag').textContent = `📂 ${q.category}`;
+  document.getElementById('ruleText').innerHTML = q.rule;
+  document.getElementById('turnScoreDisplay').textContent = '—';
+
+  // Sequence items
+  const grid = document.getElementById('sequenceGrid');
+  grid.innerHTML = '';
+  q.items.forEach((item, i) => {
+    const el = document.createElement('div');
+    el.className = 'seq-item';
+    el.innerHTML = `<span class="item-index">#${i+1}</span>
+      <div class="item-content">${item.emoji}</div>
+      <div class="item-label">${item.label}</div>`;
+    el.addEventListener('click', () => selectItem(i, el));
+    grid.appendChild(el);
+  });
+
+  // Choices
+  const cGrid = document.getElementById('choicesGrid');
+  cGrid.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.choices.forEach((ch, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerHTML = `<span class="choice-letter">${letters[i]}</span>${ch}`;
+    btn.addEventListener('click', () => selectChoice(i, btn));
+    cGrid.appendChild(btn);
+  });
+
+  // Reset feedback
+  const fp = document.getElementById('feedbackPanel');
+  fp.className = 'feedback-panel';
+  fp.style.display = '';
+  document.getElementById('btnNext').className = 'btn-next';
+  document.getElementById('btnSubmit').disabled = false;
+}
+
+function selectItem(index, el) {
+  if (answered) return;
+  selectedItem = index;
+  document.querySelectorAll('.seq-item').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function selectChoice(index, btn) {
+  if (answered) return;
+  selectedChoice = index;
+  document.querySelectorAll('.choice-btn').forEach(e => e.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function submitAnswer() {
+  if (answered) return;
+  if (selectedItem === null || selectedChoice === null) {
+    alert('Please select both the odd item AND the violated rule!');
+    return;
+  }
+  answered = true;
+  document.getElementById('btnSubmit').disabled = true;
+
+  const q = questions[currentTurn];
+  const itemCorrect = selectedItem === q.oddIndex;
+  const choiceCorrect = selectedChoice === q.correctChoice;
+  const bothCorrect = itemCorrect && choiceCorrect;
+
+  // Calculate turn score
+  let pts = 0;
+  if (itemCorrect) pts += 50;
+  if (choiceCorrect) pts += 50;
+  const turnPct = pts;
+  turnScores.push(turnPct);
+
+  if (bothCorrect) score++;
+
+  // Highlight items
+  document.querySelectorAll('.seq-item').forEach((el, i) => {
+    if (i === q.oddIndex) el.classList.add('correct');
+    else if (i === selectedItem && !itemCorrect) el.classList.add('wrong');
+  });
+
+  // Highlight choices
+  document.querySelectorAll('.choice-btn').forEach((btn, i) => {
+    if (i === q.correctChoice) btn.classList.add('correct');
+    else if (i === selectedChoice && !choiceCorrect) btn.classList.add('wrong');
+    btn.disabled = true;
+  });
+
+  // Turn score display
+  document.getElementById('turnScoreDisplay').textContent = `${turnPct}%`;
+
+  // Pop badge
+  showBadge(turnPct);
+
+  // Feedback
+  showFeedback(bothCorrect, itemCorrect, choiceCorrect, q, turnPct);
+
+  // Update overall meter
+  updateOverall();
+  updateProgressDots(bothCorrect);
+}
+
+function showBadge(pct) {
+  const badge = document.getElementById('turnBadge');
+  badge.textContent = `${pct}%`;
+  badge.classList.add('pop');
+  setTimeout(() => badge.classList.remove('pop'), 1500);
+}
+
+function showFeedback(both, item, choice, q, turnPct) {
+  const fp = document.getElementById('feedbackPanel');
+  fp.className = 'feedback-panel show ' + (both ? 'correct-fb' : 'wrong-fb');
+
+  document.getElementById('fbIcon').textContent = both ? '🎉' : (item && !choice ? '🤔' : (!item ? '❌' : '🔍'));
+  document.getElementById('fbTitle').textContent = both
+    ? 'Perfect! Both correct!'
+    : item && choice ? 'Almost!' : !item && !choice ? 'Not quite — two misses.'
+    : !item ? 'Wrong item selected.' : 'Right item, wrong rule.';
+
+  document.getElementById('fbExplain').textContent = q.explanation;
+  document.getElementById('fbScore').textContent = `Turn Score: ${turnPct}%`;
+
+  document.getElementById('btnNext').className = 'btn-next show';
+}
+
+function updateOverall() {
+  const total = turnScores.reduce((a, b) => a + b, 0);
+  const pct = turnScores.length ? Math.round(total / turnScores.length) : 0;
+  document.getElementById('pctLabel').textContent = `${pct}%`;
+  document.getElementById('meterFill').style.width = `${pct}%`;
+  document.getElementById('correctCount').textContent = score;
+}
+
+function nextTurn() {
+  currentTurn++;
+  if (currentTurn >= TOTAL) {
+    showEnd();
+  } else {
+    // Animate card out/in
+    const card = document.getElementById('cardBody');
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    setTimeout(() => {
+      loadTurn();
+      card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, 250);
+  }
+}
+
+function skipTurn() {
+  if (answered) return;
+  turnScores.push(0);
+  updateProgressDots(false);
+  updateOverall();
+  currentTurn++;
+  if (currentTurn >= TOTAL) {
+    showEnd();
+  } else {
+    loadTurn();
+  }
+}
+
+function showEnd() {
+  document.getElementById('cardBody').style.display = 'none';
+  const es = document.getElementById('endScreen');
+  es.classList.add('show');
+
+  const overall = turnScores.length ? Math.round(turnScores.reduce((a,b)=>a+b,0) / turnScores.length) : 0;
+  const best = turnScores.length ? Math.max(...turnScores) : 0;
+
+  document.getElementById('finalPct').textContent = `${overall}%`;
+  document.getElementById('esCorrect').textContent = score;
+  document.getElementById('esTotal').textContent = TOTAL;
+  document.getElementById('esBest').textContent = `${best}%`;
+
+  const trophies = overall >= 80 ? '🏆' : overall >= 50 ? '🧠' : '💪';
+  document.getElementById('trophyIcon').textContent = trophies;
+  document.getElementById('endTitle').textContent = overall >= 80 ? 'Outstanding!' : overall >= 50 ? 'Great effort!' : 'Keep practicing!';
+  document.getElementById('endMsg').textContent = overall >= 80
+    ? 'Your brain is razor-sharp. Excellent rule detection!'
+    : overall >= 50
+    ? 'Solid performance — a few more rounds and you\'ll master this.'
+    : 'Every attempt sharpens your mind. Try again!';
+
+  // Update meter to final
+  document.getElementById('pctLabel').textContent = `${overall}%`;
+  document.getElementById('meterFill').style.width = `${overall}%`;
+
+  fetch('/save_score', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ game_name: 'Rule Breaker', score: overall, rounds_played: turnScores.length, total_rounds: turnScores.length, time_taken_ms: Math.round(performance.now() - _gameStartTime) })
+  }).catch(() => {});
+}
+
+function restartGame() {
+  _gameStartTime = null;
+  currentTurn = 0; score = 0; turnScores = [];
+  selectedItem = null; selectedChoice = null; answered = false;
+
+  document.getElementById('endScreen').className = 'end-screen';
+  document.getElementById('cardBody').style.display = '';
+  document.getElementById('cardBody').style.opacity = '1';
+  document.getElementById('cardBody').style.transform = '';
+  document.getElementById('correctCount').textContent = '0';
+  document.getElementById('pctLabel').textContent = '0%';
+  document.getElementById('meterFill').style.width = '0%';
+  document.getElementById('turnDisplay').textContent = '1';
+
+  buildProgressDots();
+  loadTurn();
+}
+
+init();
+</script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body>
+</html>

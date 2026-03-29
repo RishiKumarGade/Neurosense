@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Sense - NeuroSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 60px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem 0;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar.expanded {
+            width: 250px;
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #be185d;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-toggle:hover {
+            background-color: #eef2ff;
+        }
+
+        .nav-item {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            color: #64748b;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background-color: #eef2ff;
+            color: #be185d;
+        }
+
+        .nav-item.active {
+            background-color: #be185d;
+            color: white;
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            min-width: 20px;
+        }
+
+        .nav-text {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .sidebar.expanded .nav-text {
+            opacity: 1;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 60px;
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.expanded + .main-content {
+            margin-left: 250px;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            border-radius: 24px;
+            margin: 2rem;
+            padding: 3rem 2rem;
+            color: white;
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Games Container */
+        .games-container {
+            padding: 2rem;
+            flex: 1;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #db2777, #be185d);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 12px -1px rgba(0, 0, 0, 0.15);
+            border-color: #be185d;
+        }
+
+        .game-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .game-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #fce7f3, #eef2ff);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .game-card h3 {
+            color: #be185d;
+            font-size: 1.4rem;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+
+        .game-card p {
+            color: #475569;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .difficulty-easy {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .difficulty-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .difficulty-hard {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .play-btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 0.875rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .play-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #db2777;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.expanded {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .sidebar.expanded + .main-content {
+                margin-left: 0;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div style="padding:10px 20px;background:white;border-bottom:1px solid #e2e8f0;display:flex;gap:16px;align-items:center"><a href="/dashboard" style="color:#db2777;text-decoration:none;font-weight:600;font-size:.85rem"> Home</a><a href="/cognitive-dashboard" style="color:#64748b;text-decoration:none;font-size:.85rem"> Dashboard</a><a href="/games" style="color:#64748b;text-decoration:none;font-size:.85rem">All Games</a></div>
+    <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar">
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        
+        <a href="/dashboard" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">Home</span>
+        </a>
+        
+        <a href="/games" class="nav-item active">
+            <span class="nav-icon">🧠</span>
+            <span class="nav-text">Brain Training</span>
+        </a>
+        
+        <a href="/cognitive-dashboard" class="nav-item">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">Progress</span>
+        </a>
+        
+        <a href="/mri" class="nav-item">
+            <span class="nav-icon">🔬</span>
+            <span class="nav-text">MRI Analysis</span>
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">NeuroSense</div>
+            <button class="back-btn" onclick="window.location.href='/dashboard'">
+                ← Back to Home
+            </button>
+        </header>
+
+        <!-- Page Header -->
+        <section class="page-header">
+            <h1>🎯 Number Sense</h1>
+            <p>Choose a game to test and improve your Math Skills</p>
+        </section>
+
+        <!-- Games Container -->
+        <div class="games-container">
+            <div class="games-grid">
+                <!-- Number Trail-->
+                <div class="game-card" onclick="window.location.href='/number-sense/TrailMaking'">
+                    <div class="game-icon">📝</div>
+                    <span class="difficulty-badge difficulty-easy">Easy</span>
+                    <h3>Number Trail</h3>
+                    <p>Follow and select numbers in the correct sequence as they appear on screen</p>
+                    <button class="play-btn">Play Now →</button>
+                </div>
+
+                <!--Quick Count Game -->
+                <div class="game-card" onclick="window.location.href='/number-sense/Quickcount'">
+                    <div class="game-icon">🃏</div>
+                    <span class="difficulty-badge difficulty-medium">Medium</span>
+                    <h3>Quick Count</h3>
+                    <p>Instantly estimate quantities without relying on exact counting</p>
+                    <button class="play-btn">Play Now →</button>
+                </div>
+
+                <!--Math Reflex Game -->
+                <div class="game-card" onclick="window.location.href='/number-sense/MathReflex'">
+                    <div class="game-icon">🔊</div>
+                    <span class="difficulty-badge difficulty-medium">Medium</span>
+                    <h3>Math Reflex</h3>
+                    <p>Solve simple arithmetic problems as quickly as possible</p>
+                    <button class="play-btn">Play Now →</button>
+                </div>
+
+                <!-- Value Shift Game -->
+                <div class="game-card" onclick="window.location.href='/number-sense/Valueshift'">
+                    <div class="game-icon">📖</div>
+                    <span class="difficulty-badge difficulty-hard">Hard</span>
+                    <h3>Value Shift</h3>
+                    <p>Detect changes in numerical relationships and values over time</p>
+                    <button class="play-btn">Play Now →</button>
+                </div>
+
+                <!-- Pattern Numbers Game -->
+                <div class="game-card" onclick="window.location.href='/number-sense/PatternNumbers'">
+                    <div class="game-icon">🗺️</div>
+                    <span class="difficulty-badge difficulty-hard">Hard</span>
+                    <h3>Pattern Numbers</h3>
+                    <p>Identify and complete hidden numerical patterns</p>
+                    <button class="play-btn">Play Now →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 NeuroSense. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('expanded');
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.sidebar-toggle');
+            
+            if (window.innerWidth <= 768 && sidebar.classList.contains('expanded') && 
+                !sidebar.contains(e.target) && !toggle.contains(e.target)) {
+                sidebar.classList.remove('expanded');
+            }
+        });
+
+        // Handle navigation items
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                if (this.getAttribute('href') !== '#') return;
+                
+                e.preventDefault();
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

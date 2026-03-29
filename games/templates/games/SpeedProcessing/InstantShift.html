@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instant Shift - NeuroSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            color: #64748b;
+        }
+
+        .main-content {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .game-header h1 {
+            font-size: 2.5rem;
+            color: #be185d;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .game-header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        .game-board {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 2rem;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: linear-gradient(135deg, #fce7f3, #eef2ff);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #be185d;
+            margin-top: 0.25rem;
+        }
+
+        /* Instructions */
+        .instructions {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #6366f1;
+        }
+
+        .instructions h3 {
+            color: #3730a3;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .instructions p {
+            color: #4338ca;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .instructions .warning {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid #fca5a5;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        /* Task Display */
+        .task-display {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 2rem;
+            border-radius: 16px;
+            margin: 2rem 0;
+            text-align: center;
+            border: 3px solid #eab308;
+            position: relative;
+        }
+
+        .task-display.shifting {
+            animation: shift-flash 0.6s ease 3;
+        }
+
+        @keyframes shift-flash {
+            0%, 100% { 
+                background: linear-gradient(135deg, #fef3c7, #fde68a);
+                transform: scale(1);
+            }
+            50% { 
+                background: linear-gradient(135deg, #fee2e2, #fecaca);
+                transform: scale(1.02);
+            }
+        }
+
+        .task-label {
+            font-size: 1rem;
+            color: #78350f;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .task-text {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #be185d;
+            margin-bottom: 0.5rem;
+        }
+
+        .task-instruction {
+            font-size: 1.1rem;
+            color: #92400e;
+            font-weight: 600;
+        }
+
+        .shift-counter {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #ef4444;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            animation: pulse-counter 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse-counter {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Challenge Display */
+        .challenge-display {
+            background: white;
+            border: 4px solid #be185d;
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 2rem 0;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .challenge-item {
+            font-size: 5rem;
+            font-weight: 800;
+            color: #be185d;
+            margin-bottom: 1rem;
+            animation: item-pop 0.3s ease;
+        }
+
+        @keyframes item-pop {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .challenge-options {
+            font-size: 1.2rem;
+            color: #64748b;
+            margin-top: 1rem;
+        }
+
+        /* Answer Buttons */
+        .answer-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .answer-btn {
+            background: white;
+            border: 3px solid #e2e8f0;
+            padding: 2rem;
+            border-radius: 20px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .answer-btn:hover {
+            transform: translateY(-4px);
+            border-color: #be185d;
+            box-shadow: 0 8px 20px rgba(219, 39, 119, 0.2);
+        }
+
+        .answer-btn.yes {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            border-color: #22c55e;
+            color: #166534;
+        }
+
+        .answer-btn.no {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .answer-btn.correct {
+            animation: correct-bounce 0.5s ease;
+        }
+
+        .answer-btn.incorrect {
+            animation: incorrect-shake 0.5s ease;
+        }
+
+        @keyframes correct-bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes incorrect-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #db2777, #be185d, #a855f7);
+            transition: width 0.3s ease;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+        }
+
+        .control-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .control-btn.secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* Status Message */
+        .status-message {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 1.5rem 0;
+            min-height: 2rem;
+            color: #be185d;
+        }
+
+        .status-message.success {
+            color: #22c55e;
+        }
+
+        .status-message.error {
+            color: #ef4444;
+        }
+
+        /* Results Summary */
+        .results-summary {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-top: 2rem;
+            border-left: 4px solid #6366f1;
+            display: none;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3730a3;
+            margin-bottom: 1rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .result-box {
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .result-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-header h1 {
+                font-size: 2rem;
+            }
+
+            .game-board {
+                padding: 2rem 1rem;
+            }
+
+            .challenge-item {
+                font-size: 3.5rem;
+            }
+
+            .task-text {
+                font-size: 2rem;
+            }
+
+            .answer-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .answer-btn {
+                padding: 1.5rem;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">NeuroSense</div>
+            <button class="back-btn" onclick="window.location.href='/speed-processing'">
+                ← Back to Speed Games
+            </button>
+        </header>
+
+        <!-- Game Container -->
+        <div class="game-container">
+            <div class="game-header">
+                <h1>🔄 Instant Shift</h1>
+                <p>Adapt quickly as tasks change without warning!</p>
+            </div>
+
+            <div class="game-board">
+                <!-- Instructions -->
+                <div class="instructions" id="instructions">
+                    <h3>⚡ How to Play:</h3>
+                    <p>Answer questions based on the CURRENT TASK shown at the top</p>
+                    <p>Tasks switch randomly every 3-7 questions</p>
+                    <p>Stay alert - the task changes WITHOUT WARNING!</p>
+                    <p>Answer 30 questions as accurately as possible</p>
+                    <p class="warning">⚠️ When the task shifts, the screen will FLASH RED - adapt instantly!</p>
+                </div>
+
+                <!-- Stats Bar -->
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-label">Question</div>
+                        <div class="stat-value" id="question-num">0/30</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Score</div>
+                        <div class="stat-value" id="score">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Shifts</div>
+                        <div class="stat-value" id="shifts">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Accuracy</div>
+                        <div class="stat-value" id="accuracy">100%</div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+
+                <!-- Status Message -->
+                <div class="status-message" id="status">Click "Start Game" to begin!</div>
+
+                <!-- Task Display -->
+                <div class="task-display" id="task-display" style="display: none;">
+                    <div class="shift-counter" id="shift-counter" style="display: none;">SHIFT!</div>
+                    <div class="task-label">CURRENT TASK:</div>
+                    <div class="task-text" id="task-text"></div>
+                    <div class="task-instruction" id="task-instruction"></div>
+                </div>
+
+                <!-- Challenge Display -->
+                <div class="challenge-display" id="challenge-display" style="display: none;">
+                    <div class="challenge-item" id="challenge-item"></div>
+                    <div class="challenge-options" id="challenge-options"></div>
+                </div>
+
+                <!-- Answer Buttons -->
+                <div class="answer-buttons" id="answer-buttons" style="display: none;">
+                    <button class="answer-btn yes" onclick="submitAnswer(true)">
+                        ✓ YES
+                    </button>
+                    <button class="answer-btn no" onclick="submitAnswer(false)">
+                        ✗ NO
+                    </button>
+                </div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <button class="control-btn" id="start-btn" onclick="startGame()">
+                        ▶️ Start Game
+                    </button>
+                    <button class="control-btn secondary" onclick="resetGame()">
+                        🔄 Reset
+                    </button>
+                </div>
+
+                <!-- Results Summary -->
+                <div class="results-summary" id="results-summary">
+                    <div class="results-title">🎉 Game Complete!</div>
+                    <div class="results-grid">
+                        <div class="result-box">
+                            <div class="result-label">Final Score</div>
+                            <div class="result-value" id="final-score">0</div>
+                        </div>
+                        <div class="result-box">
+                            <div class="result-label">Accuracy</div>
+                            <div class="result-value" id="final-accuracy">0%</div>
+                        </div>
+                        <div class="result-box">
+                            <div class="result-label">Total Shifts</div>
+                            <div class="result-value" id="total-shifts">0</div>
+                        </div>
+                        <div class="result-box">
+                            <div class="result-label">Shift Accuracy</div>
+                            <div class="result-value" id="shift-accuracy">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tasks = [
+            {
+                name: "NUMBER: Even or Odd?",
+                instruction: "Is the number EVEN?",
+                generate: () => {
+                    const num = Math.floor(Math.random() * 100) + 1;
+                    return {
+                        item: num,
+                        answer: num % 2 === 0,
+                        display: num.toString()
+                    };
+                }
+            },
+            {
+                name: "NUMBER: Greater than 50?",
+                instruction: "Is the number > 50?",
+                generate: () => {
+                    const num = Math.floor(Math.random() * 100) + 1;
+                    return {
+                        item: num,
+                        answer: num > 50,
+                        display: num.toString()
+                    };
+                }
+            },
+            {
+                name: "COLOR: Is it WARM?",
+                instruction: "Is this a WARM color?",
+                generate: () => {
+                    const colors = [
+                        { emoji: '🔴', warm: true, name: 'Red' },
+                        { emoji: '🔵', warm: false, name: 'Blue' },
+                        { emoji: '🟢', warm: false, name: 'Green' },
+                        { emoji: '🟡', warm: true, name: 'Yellow' },
+                        { emoji: '🟠', warm: true, name: 'Orange' },
+                        { emoji: '🟣', warm: false, name: 'Purple' }
+                    ];
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    return {
+                        item: color.emoji,
+                        answer: color.warm,
+                        display: color.emoji + ' ' + color.name
+                    };
+                }
+            },
+            {
+                name: "FOOD: Is it a FRUIT?",
+                instruction: "Is this a FRUIT?",
+                generate: () => {
+                    const items = [
+                        { emoji: '🍎', fruit: true },
+                        { emoji: '🥕', fruit: false },
+                        { emoji: '🍌', fruit: true },
+                        { emoji: '🥬', fruit: false },
+                        { emoji: '🍊', fruit: true },
+                        { emoji: '🥒', fruit: false },
+                        { emoji: '🍇', fruit: true },
+                        { emoji: '🥔', fruit: false }
+                    ];
+                    const item = items[Math.floor(Math.random() * items.length)];
+                    return {
+                        item: item.emoji,
+                        answer: item.fruit,
+                        display: item.emoji
+                    };
+                }
+            },
+            {
+                name: "SHAPE: Is it ROUND?",
+                instruction: "Is this shape ROUND?",
+                generate: () => {
+                    const shapes = [
+                        { emoji: '🔵', round: true },
+                        { emoji: '⬛', round: false },
+                        { emoji: '⭕', round: true },
+                        { emoji: '🔺', round: false },
+                        { emoji: '🟣', round: true },
+                        { emoji: '🔶', round: false }
+                    ];
+                    const shape = shapes[Math.floor(Math.random() * shapes.length)];
+                    return {
+                        item: shape.emoji,
+                        answer: shape.round,
+                        display: shape.emoji
+                    };
+                }
+            },
+            {
+                name: "LETTER: Is it a VOWEL?",
+                instruction: "Is this letter a VOWEL?",
+                generate: () => {
+                    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    const vowels = 'AEIOU';
+                    const letter = letters[Math.floor(Math.random() * letters.length)];
+                    return {
+                        item: letter,
+                        answer: vowels.includes(letter),
+                        display: letter
+                    };
+                }
+            }
+        ];
+
+        let gameState = {
+            currentTaskIndex: 0,
+            questionNum: 0,
+            maxQuestions: 30,
+            score: 0,
+            correct: 0,
+            shifts: 0,
+            questionsUntilShift: 0,
+            questionsAfterShift: 0,
+            shiftCorrect: 0,
+            currentChallenge: null,
+            isPlaying: false
+        };
+
+        let _gameStartTime = null;
+
+        function startGame() {
+            _gameStartTime = performance.now();
+            gameState = {
+                currentTaskIndex: Math.floor(Math.random() * tasks.length),
+                questionNum: 0,
+                maxQuestions: 30,
+                score: 0,
+                correct: 0,
+                shifts: 0,
+                questionsUntilShift: Math.floor(Math.random() * 5) + 3,
+                questionsAfterShift: 0,
+                shiftCorrect: 0,
+                currentChallenge: null,
+                isPlaying: true
+            };
+
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('task-display').style.display = 'block';
+            document.getElementById('challenge-display').style.display = 'flex';
+            document.getElementById('answer-buttons').style.display = 'grid';
+            document.getElementById('results-summary').style.display = 'none';
+            document.getElementById('start-btn').disabled = true;
+
+            updateDisplay();
+            loadTask();
+            nextQuestion();
+        }
+
+        function loadTask() {
+            const task = tasks[gameState.currentTaskIndex];
+            document.getElementById('task-text').textContent = task.name;
+            document.getElementById('task-instruction').textContent = task.instruction;
+        }
+
+        function shiftTask() {
+            gameState.shifts++;
+            gameState.questionsAfterShift = 0;
+            
+            // Select different task
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * tasks.length);
+            } while (newIndex === gameState.currentTaskIndex);
+            
+            gameState.currentTaskIndex = newIndex;
+            
+            // Visual alert
+            const taskDisplay = document.getElementById('task-display');
+            const shiftCounter = document.getElementById('shift-counter');
+            
+            taskDisplay.classList.add('shifting');
+            shiftCounter.style.display = 'block';
+            
+            updateStatus('🔄 TASK SHIFTED! Pay attention!', 'error');
+            
+            setTimeout(() => {
+                taskDisplay.classList.remove('shifting');
+                shiftCounter.style.display = 'none';
+                loadTask();
+            }, 1800);
+            
+            // Next shift in 3-7 questions
+            gameState.questionsUntilShift = Math.floor(Math.random() * 5) + 3;
+        }
+
+        function nextQuestion() {
+            if (gameState.questionNum >= gameState.maxQuestions) {
+                endGame();
+                return;
+            }
+
+            gameState.questionNum++;
+            gameState.questionsAfterShift++;
+
+            // Check if it's time to shift
+            if (gameState.questionNum > 1 && gameState.questionNum % gameState.questionsUntilShift === 0) {
+                shiftTask();
+            }
+
+            // Generate challenge
+            const task = tasks[gameState.currentTaskIndex];
+            gameState.currentChallenge = task.generate();
+
+            document.getElementById('challenge-item').textContent = gameState.currentChallenge.display;
+
+            updateDisplay();
+            updateStatus('Answer based on the current task!', '');
+        }
+
+        function submitAnswer(userAnswer) {
+            if (!gameState.isPlaying) return;
+
+            const buttons = document.querySelectorAll('.answer-btn');
+            buttons.forEach(btn => btn.disabled = true);
+
+            const isCorrect = userAnswer === gameState.currentChallenge.answer;
+            const clickedBtn = userAnswer ? buttons[0] : buttons[1];
+
+            if (isCorrect) {
+                clickedBtn.classList.add('correct');
+                gameState.correct++;
+                gameState.score += 50;
+
+                // Track accuracy right after shifts
+                if (gameState.questionsAfterShift <= 2) {
+                    gameState.shiftCorrect++;
+                }
+
+                updateStatus('✅ Correct!', 'success');
+            } else {
+                clickedBtn.classList.add('incorrect');
+                gameState.score = Math.max(0, gameState.score - 25);
+                updateStatus('❌ Wrong! Stay focused on the current task!', 'error');
+            }
+
+            setTimeout(() => {
+                clickedBtn.classList.remove('correct', 'incorrect');
+                buttons.forEach(btn => btn.disabled = false);
+                nextQuestion();
+            }, 1000);
+
+            updateDisplay();
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+
+            const accuracy = gameState.maxQuestions > 0 
+                ? Math.round((gameState.correct / gameState.maxQuestions) * 100)
+                : 0;
+
+            const shiftAccuracy = gameState.shifts > 0
+                ? Math.round((gameState.shiftCorrect / (gameState.shifts * 2)) * 100)
+                : 100;
+
+            document.getElementById('final-score').textContent = gameState.score;
+            document.getElementById('final-accuracy').textContent = accuracy + '%';
+            document.getElementById('total-shifts').textContent = gameState.shifts;
+            document.getElementById('shift-accuracy').textContent = shiftAccuracy + '%';
+
+            document.getElementById('task-display').style.display = 'none';
+            document.getElementById('challenge-display').style.display = 'none';
+            document.getElementById('answer-buttons').style.display = 'none';
+            document.getElementById('results-summary').style.display = 'block';
+            document.getElementById('start-btn').disabled = false;
+
+            updateStatus('🎉 Game Complete! Check your results below.', 'success');
+
+            fetch('/save_score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    game_name: 'Instant Shift',
+                    score: gameState.score,
+                    time_taken_ms: _gameStartTime ? Math.round(performance.now() - _gameStartTime) : null,
+                    rounds_played: gameState.maxQuestions,
+                    total_rounds: gameState.maxQuestions
+                })
+            }).catch(err => console.error('Score save failed:', err));
+        }
+
+        function updateDisplay() {
+            document.getElementById('question-num').textContent = `${gameState.questionNum}/${gameState.maxQuestions}`;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('shifts').textContent = gameState.shifts;
+
+            const accuracy = gameState.questionNum > 0 
+                ? Math.round((gameState.correct / gameState.questionNum) * 100)
+                : 100;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+
+            const progress = (gameState.questionNum / gameState.maxQuestions) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+        }
+
+        function updateStatus(message, type = '') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status-message ' + type;
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('task-display').style.display = 'none';
+            document.getElementById('challenge-display').style.display = 'none';
+            document.getElementById('answer-buttons').style.display = 'none';
+            document.getElementById('results-summary').style.display = 'none';
+            document.getElementById('start-btn').disabled = false;
+
+            gameState = {
+                currentTaskIndex: 0,
+                questionNum: 0,
+                maxQuestions: 30,
+                score: 0,
+                correct: 0,
+                shifts: 0,
+                questionsUntilShift: 0,
+                questionsAfterShift: 0,
+                shiftCorrect: 0,
+                currentChallenge: null,
+                isPlaying: false
+            };
+
+            updateStatus('Click "Start Game" to begin!');
+            updateDisplay();
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (!gameState.isPlaying) return;
+            
+            if (e.key === 'y' || e.key === 'Y' || e.key === 'ArrowLeft') {
+                submitAnswer(true);
+            } else if (e.key === 'n' || e.key === 'N' || e.key === 'ArrowRight') {
+                submitAnswer(false);
+            }
+        });
+
+        // Initialize
+        updateDisplay();
+    </script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body>
+</html>

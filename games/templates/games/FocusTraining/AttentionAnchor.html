@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attention Anchor - NeuroSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            color: #64748b;
+        }
+
+        .main-content {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem 2rem 2rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .game-header h1 {
+            font-size: 2.5rem;
+            color: #be185d;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .game-header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            min-width: 100px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #be185d;
+            margin-top: 0.25rem;
+        }
+
+        /* Game Arena */
+        .game-arena {
+            position: relative;
+            flex: 1;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            min-height: 500px;
+            max-height: 600px;
+            border: 3px solid rgba(219, 39, 119, 0.2);
+        }
+
+        .instructions-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 2rem;
+            z-index: 20;
+            overflow-y: auto;
+        }
+
+        .instructions-content {
+            max-width: 600px;
+            text-align: center;
+            margin: auto 0;
+        }
+
+        .instructions-content h2 {
+            color: #be185d;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .instruction-item {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            text-align: left;
+            border-left: 4px solid #6366f1;
+        }
+
+        .instruction-item strong {
+            color: #3730a3;
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .instruction-item p {
+            color: #4338ca;
+            line-height: 1.5;
+        }
+
+        .difficulty-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .difficulty-btn:hover {
+            border-color: #be185d;
+            color: #be185d;
+        }
+
+        .difficulty-btn.active {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border-color: #be185d;
+        }
+
+        .start-btn-large {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 1.5rem 3rem;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 2rem;
+        }
+
+        .start-btn-large:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(219, 39, 119, 0.4);
+        }
+
+        /* Target Object */
+        .target-object {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #db2777, #be185d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.4);
+            z-index: 10;
+        }
+
+        .target-object:hover {
+            transform: scale(1.1);
+        }
+
+        .target-object.clicked {
+            animation: click-pulse 0.3s ease;
+        }
+
+        @keyframes click-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        /* Distractor Objects */
+        .distractor {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 5;
+        }
+
+        .distractor:hover {
+            transform: scale(1.05);
+        }
+
+        .distractor.clicked-wrong {
+            animation: wrong-shake 0.5s ease;
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+        }
+
+        @keyframes wrong-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        /* Timer Circle */
+        .timer-circle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 100px;
+            height: 100px;
+            z-index: 15;
+        }
+
+        .timer-svg {
+            transform: rotate(-90deg);
+        }
+
+        .timer-circle-bg {
+            fill: none;
+            stroke: #e2e8f0;
+            stroke-width: 8;
+        }
+
+        .timer-circle-progress {
+            fill: none;
+            stroke: #be185d;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.1s linear;
+        }
+
+        .timer-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        /* Status Message */
+        .status-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem 3rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            z-index: 25;
+            display: none;
+        }
+
+        .status-overlay.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -40%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        .status-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .status-title.success {
+            color: #22c55e;
+        }
+
+        .status-title.fail {
+            color: #ef4444;
+        }
+
+        .status-details {
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+        }
+
+        /* Focus Lost Indicator */
+        .focus-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            z-index: 30;
+            display: none;
+        }
+
+        .focus-indicator.show {
+            display: block;
+            animation: pulse 0.5s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-header h1 {
+                font-size: 2rem;
+            }
+
+            .target-object {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+
+            .distractor {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+
+            .timer-circle {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">NeuroSense</div>
+            <button class="back-btn" onclick="window.location.href='/focus-training'">
+                ← Back to FocusTraining
+            </button>
+        </header>
+
+        <!-- Game Container -->
+        <div class="game-container">
+            <div class="game-header">
+                <h1>⚓ Attention Anchor</h1>
+                <p>Keep your focus locked on the target!</p>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-label">Round</div>
+                    <div class="stat-value" id="round">1</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Score</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Focus Time</div>
+                    <div class="stat-value" id="focus-time">0s</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Accuracy</div>
+                    <div class="stat-value" id="accuracy">100%</div>
+                </div>
+            </div>
+
+            <!-- Game Arena -->
+            <div class="game-arena" id="game-arena">
+                <!-- Instructions Overlay -->
+                <div class="instructions-overlay" id="instructions-overlay">
+                    <div class="instructions-content">
+                        <h2>⚓ How to Play</h2>
+                        
+                        <div class="instruction-item">
+                            <strong>🎯 Your Mission</strong>
+                            <p>Keep clicking the TARGET (colored circle with emoji) as it moves around the screen</p>
+                        </div>
+
+                        <div class="instruction-item">
+                            <strong>⏱️ Time Challenge</strong>
+                            <p>Maintain focus for the full duration. Missing clicks or hitting distractors costs you!</p>
+                        </div>
+
+                        <div class="instruction-item">
+                            <strong>🚫 Avoid Distractors</strong>
+                            <p>Gray circles are distractors. Don't click them! They'll penalize your score.</p>
+                        </div>
+
+                        <div class="instruction-item">
+                            <strong>📈 Progressive Difficulty</strong>
+                            <p>Distractors increase each round. Stay focused!</p>
+                        </div>
+
+                        <div class="difficulty-selector">
+                            <button class="difficulty-btn active" onclick="setDifficulty('easy')">
+                                Easy (30s)
+                            </button>
+                            <button class="difficulty-btn" onclick="setDifficulty('medium')">
+                                Medium (45s)
+                            </button>
+                            <button class="difficulty-btn" onclick="setDifficulty('hard')">
+                                Hard (60s)
+                            </button>
+                        </div>
+
+                        <button class="start-btn-large" onclick="startGame()">
+                            ▶️ Start Game
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Timer Circle -->
+                <div class="timer-circle" id="timer-circle" style="display: none;">
+                    <svg class="timer-svg" width="100" height="100">
+                        <circle class="timer-circle-bg" cx="50" cy="50" r="42"></circle>
+                        <circle class="timer-circle-progress" cx="50" cy="50" r="42" id="timer-progress"></circle>
+                    </svg>
+                    <div class="timer-text" id="timer-text">30</div>
+                </div>
+
+                <!-- Focus Lost Indicator -->
+                <div class="focus-indicator" id="focus-indicator">
+                    ⚠️ Target Missed!
+                </div>
+
+                <!-- Status Overlay -->
+                <div class="status-overlay" id="status-overlay">
+                    <div class="status-title" id="status-title">Round Complete!</div>
+                    <div class="status-details" id="status-details"></div>
+                    <button class="next-btn" onclick="nextRound()">Continue ➡️</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const targetEmojis = ['⚓', '🎯', '⭐', '💎', '🔥', '⚡', '🌟', '✨'];
+        const distractorEmojis = ['◯', '○', '◌', '⚪', '⚫', '●'];
+
+        const difficultySettings = {
+            easy: { duration: 30, moveSpeed: 2000, initialDistractors: 2 },
+            medium: { duration: 45, moveSpeed: 1500, initialDistractors: 3 },
+            hard: { duration: 60, moveSpeed: 1000, initialDistractors: 5 }
+        };
+
+        let gameState = {
+            difficulty: 'easy',
+            round: 1,
+            score: 0,
+            isPlaying: false,
+            targetClicks: 0,
+            wrongClicks: 0,
+            totalTimeRemaining: 30,
+            timeRemaining: 30,
+            focusTime: 0,
+            targetElement: null,
+            distractors: [],
+            moveInterval: null,
+            timerInterval: null,
+            focusInterval: null
+        };
+
+        function setDifficulty(level) {
+            gameState.difficulty = level;
+            
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Find and activate the clicked button
+            const buttons = document.querySelectorAll('.difficulty-btn');
+            buttons.forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(level)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function startGame() {
+            _gameStartTime = performance.now();
+            const settings = difficultySettings[gameState.difficulty];
+            
+            gameState.isPlaying = true;
+            gameState.totalTimeRemaining = settings.duration;
+            gameState.timeRemaining = settings.duration;
+            gameState.targetClicks = 0;
+            gameState.wrongClicks = 0;
+            gameState.focusTime = 0;
+
+            document.getElementById('instructions-overlay').style.display = 'none';
+            document.getElementById('timer-circle').style.display = 'block';
+
+            createTarget();
+            createDistractors(settings.initialDistractors + (gameState.round - 1));
+            startMovement(settings.moveSpeed);
+            startTimer();
+            startFocusTracking();
+            updateDisplay();
+        }
+
+        function createTarget() {
+            const arena = document.getElementById('game-arena');
+            const target = document.createElement('div');
+            target.className = 'target-object';
+            target.textContent = targetEmojis[Math.floor(Math.random() * targetEmojis.length)];
+            
+            positionRandomly(target);
+            target.addEventListener('click', handleTargetClick);
+            
+            arena.appendChild(target);
+            gameState.targetElement = target;
+        }
+
+        function createDistractors(count) {
+            const arena = document.getElementById('game-arena');
+            gameState.distractors = [];
+
+            for (let i = 0; i < count; i++) {
+                const distractor = document.createElement('div');
+                distractor.className = 'distractor';
+                distractor.textContent = distractorEmojis[Math.floor(Math.random() * distractorEmojis.length)];
+                
+                positionRandomly(distractor);
+                distractor.addEventListener('click', handleDistractorClick);
+                
+                arena.appendChild(distractor);
+                gameState.distractors.push(distractor);
+            }
+        }
+
+        function positionRandomly(element) {
+            const arena = document.getElementById('game-arena');
+            const rect = arena.getBoundingClientRect();
+            
+            const maxX = rect.width - 80;
+            const maxY = rect.height - 80;
+            
+            const x = Math.random() * maxX + 20;
+            const y = Math.random() * maxY + 20;
+            
+            element.style.left = x + 'px';
+            element.style.top = y + 'px';
+        }
+
+        function startMovement(speed) {
+            gameState.moveInterval = setInterval(() => {
+                if (gameState.isPlaying) {
+                    positionRandomly(gameState.targetElement);
+                    gameState.distractors.forEach(d => positionRandomly(d));
+                }
+            }, speed);
+        }
+
+        function handleTargetClick() {
+            if (!gameState.isPlaying) return;
+            
+            gameState.targetClicks++;
+            gameState.score += 10;
+            gameState.targetElement.classList.add('clicked');
+            
+            setTimeout(() => {
+                gameState.targetElement.classList.remove('clicked');
+            }, 300);
+            
+            updateDisplay();
+        }
+
+        function handleDistractorClick(event) {
+            if (!gameState.isPlaying) return;
+            
+            gameState.wrongClicks++;
+            gameState.score = Math.max(0, gameState.score - 15);
+            
+            event.target.classList.add('clicked-wrong');
+            showFocusLost();
+            
+            setTimeout(() => {
+                event.target.classList.remove('clicked-wrong');
+            }, 500);
+            
+            updateDisplay();
+        }
+
+        function showFocusLost() {
+            const indicator = document.getElementById('focus-indicator');
+            indicator.classList.add('show');
+            
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 1000);
+        }
+
+        function startTimer() {
+            const circumference = 2 * Math.PI * 42;
+            const progress = document.getElementById('timer-progress');
+            progress.style.strokeDasharray = circumference;
+            progress.style.strokeDashoffset = 0;
+
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeRemaining--;
+                
+                const offset = circumference * (1 - gameState.timeRemaining / gameState.totalTimeRemaining);
+                progress.style.strokeDashoffset = offset;
+                
+                document.getElementById('timer-text').textContent = gameState.timeRemaining;
+                
+                if (gameState.timeRemaining <= 0) {
+                    endRound();
+                }
+            }, 1000);
+        }
+
+        function startFocusTracking() {
+            gameState.focusInterval = setInterval(() => {
+                if (gameState.isPlaying) {
+                    gameState.focusTime++;
+                    updateDisplay();
+                }
+            }, 1000);
+        }
+
+        let _gameStartTime = null;
+        const MAX_ROUNDS = 5;
+
+        async function saveScore(score) {
+            const timeTaken = _gameStartTime ? Math.round(performance.now() - _gameStartTime) : null;
+            try {
+                await fetch('/save_score', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ game_name: 'attention-anchor', time_taken_ms: timeTaken, score: score, rounds_played: MAX_ROUNDS, total_rounds: MAX_ROUNDS })
+                });
+            } catch (error) {
+                console.error('Error saving score:', error);
+            }
+        }
+
+        function endRound() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.moveInterval);
+            clearInterval(gameState.timerInterval);
+            clearInterval(gameState.focusInterval);
+
+            const accuracy = gameState.targetClicks + gameState.wrongClicks > 0
+                ? Math.round((gameState.targetClicks / (gameState.targetClicks + gameState.wrongClicks)) * 100)
+                : 100;
+            const timeBonus = Math.floor(gameState.focusTime * 2);
+            gameState.score += timeBonus;
+
+            // Only save when game is complete
+            if (gameState.round >= MAX_ROUNDS) {
+                saveScore(gameState.score);
+            }
+
+            const statusOverlay = document.getElementById('status-overlay');
+            const statusTitle = document.getElementById('status-title');
+            const statusDetails = document.getElementById('status-details');
+
+            if (gameState.round >= MAX_ROUNDS) {
+                statusTitle.textContent = '🏆 Game Complete!';
+                statusTitle.className = 'status-title success';
+                document.querySelector('.next-btn').textContent = 'Play Again';
+                document.querySelector('.next-btn').onclick = () => { gameState.round = 0; nextRound(); };
+            } else if (accuracy >= 70) {
+                statusTitle.textContent = '🎉 Round Complete!';
+                statusTitle.className = 'status-title success';
+            } else {
+                statusTitle.textContent = '⚠️ Round Complete';
+                statusTitle.className = 'status-title fail';
+            }
+
+            statusDetails.innerHTML = `
+                <div>Round: ${gameState.round}/${MAX_ROUNDS}</div>
+                <div>Target Clicks: ${gameState.targetClicks}</div>
+                <div>Wrong Clicks: ${gameState.wrongClicks}</div>
+                <div>Accuracy: ${accuracy}%</div>
+                <div>Time Bonus: +${timeBonus} points</div>
+                <div style="margin-top:1rem;font-weight:700;font-size:1.3rem;color:#be185d;">Total Score: ${gameState.score}</div>
+            `;
+            statusOverlay.classList.add('show');
+        }
+
+        function nextRound() {
+            // Clear previous round
+            if (gameState.targetElement) gameState.targetElement.remove();
+            gameState.distractors.forEach(d => d.remove());
+            document.getElementById('status-overlay').classList.remove('show');
+
+            gameState.round++;
+            startGame();
+        }
+
+        function updateDisplay() {
+            document.getElementById('round').textContent = `${gameState.round}/${MAX_ROUNDS}`;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('focus-time').textContent = gameState.focusTime + 's';
+
+            const accuracy = gameState.targetClicks + gameState.wrongClicks > 0
+                ? Math.round((gameState.targetClicks / (gameState.targetClicks + gameState.wrongClicks)) * 100)
+                : 100;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        // Initialize
+        updateDisplay();
+    </script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body>
+</html>

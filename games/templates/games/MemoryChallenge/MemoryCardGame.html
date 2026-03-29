@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Card Game - NeuroSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            color: #64748b;
+        }
+
+        .main-content {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .game-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: auto;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(219, 39, 119, 0.1);
+            text-align: center;
+            max-width: 95vw;
+            max-height: 90vh;
+            overflow: auto;
+            width: 100%;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #db2777, #be185d, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .level-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .level-btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            position: relative;
+        }
+
+        .level-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(219, 39, 119, 0.4);
+        }
+
+        .level-btn.active {
+            background: linear-gradient(135deg, #a855f7, #8b5cf6);
+        }
+
+        .level-btn.completed {
+            background: linear-gradient(135deg, #4caf50, #388e3c);
+        }
+
+        .level-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .level-btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .level-description {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+
+        .score-board {
+            background: linear-gradient(135deg, rgba(219, 39, 119, 0.1), rgba(168, 85, 247, 0.1));
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 20px;
+            align-items: center;
+            border: 1px solid rgba(219, 39, 119, 0.2);
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-label {
+            color: #be185d;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            color: #be185d;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .game-board-wrapper {
+            max-height: 60vh;
+            overflow: auto;
+            padding: 10px;
+            border: 2px solid rgba(219, 39, 119, 0.2);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, rgba(253, 242, 248, 0.5), rgba(248, 250, 252, 0.5));
+        }
+
+        .game-grid {
+            display: grid;
+            gap: 3px;
+            margin: 0 auto;
+            justify-content: center;
+        }
+
+        .game-grid.grid-4x4 {
+            grid-template-columns: repeat(4, 80px);
+            max-width: 340px;
+        }
+
+        .game-grid.grid-8x8 {
+            grid-template-columns: repeat(8, 50px);
+            max-width: 420px;
+        }
+
+        .game-grid.grid-16x16 {
+            grid-template-columns: repeat(16, 30px);
+            max-width: 500px;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #be185d;
+            transition: all 0.2s ease;
+            transform-style: preserve-3d;
+            position: relative;
+            font-size: 1rem;
+            border: 2px solid rgba(219, 39, 119, 0.2);
+        }
+
+        .grid-4x4 .card {
+            font-size: 1.2rem;
+        }
+
+        .grid-8x8 .card {
+            font-size: 0.9rem;
+        }
+
+        .grid-16x16 .card {
+            font-size: 0.6rem;
+        }
+
+        .card:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+            z-index: 1;
+        }
+
+        .card.flipped {
+            background: linear-gradient(135deg, #fff, #fce7f3);
+            color: #db2777;
+            transform: scale(1.05);
+            border-color: #db2777;
+        }
+
+        .card.matched {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            color: #22c55e;
+            cursor: default;
+            border-color: #22c55e;
+        }
+
+        .card.matched:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(219, 39, 119, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .message.show {
+            opacity: 1;
+        }
+
+        .message.success {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            color: #22c55e;
+            border: 1px solid #22c55e;
+        }
+
+        .message.win {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        .message.level-complete {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            color: #22c55e;
+            border: 1px solid #22c55e;
+        }
+
+        @media (max-width: 768px) {
+            .game-wrapper {
+                padding: 1rem;
+            }
+
+            .game-container {
+                padding: 20px;
+            }
+
+            .game-grid.grid-4x4 {
+                grid-template-columns: repeat(4, 70px);
+            }
+            
+            .game-grid.grid-8x8 {
+                grid-template-columns: repeat(8, 40px);
+            }
+            
+            .game-grid.grid-16x16 {
+                grid-template-columns: repeat(16, 25px);
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-grid.grid-4x4 {
+                grid-template-columns: repeat(4, 60px);
+            }
+            
+            .game-grid.grid-8x8 {
+                grid-template-columns: repeat(8, 35px);
+            }
+            
+            .game-grid.grid-16x16 {
+                grid-template-columns: repeat(16, 20px);
+            }
+            
+            .grid-16x16 .card {
+                font-size: 0.5rem;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">NeuroSense</div>
+            <button class="back-btn" onclick="window.location.href='/memory-challenge'">
+                ← Back to Memory Games
+            </button>
+        </header>
+
+        <!-- Game Wrapper -->
+        <div class="game-wrapper">
+            <div class="game-container">
+                <h1 class="title">Memory Card Challenge</h1>
+                <p class="subtitle">Three epic levels of increasing difficulty!</p>
+                
+                <div class="level-selector">
+                    <button class="level-btn active" onclick="startLevel(1)">
+                        Level 1 - Beginner
+                        <div class="level-description">4×4 Grid (8 pairs)</div>
+                    </button>
+                    <button class="level-btn" onclick="startLevel(2)" id="level2Btn">
+                        Level 2 - Expert
+                        <div class="level-description">8×8 Grid (32 pairs)</div>
+                    </button>
+                    <button class="level-btn" onclick="startLevel(3)" id="level3Btn">
+                        Level 3 - Master
+                        <div class="level-description">16×16 Grid (128 pairs)</div>
+                    </button>
+                </div>
+                
+                <div class="score-board">
+                    <div class="score-item">
+                        <div class="score-label">Level</div>
+                        <div class="score-value" id="currentLevel">1</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Score</div>
+                        <div class="score-value" id="score">0</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Moves</div>
+                        <div class="score-value" id="moves">0</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Pairs</div>
+                        <div class="score-value" id="pairs">0/8</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Time</div>
+                        <div class="score-value" id="timer">00:00</div>
+                    </div>
+                </div>
+                
+                <div class="game-board-wrapper">
+                    <div class="game-grid grid-4x4" id="gameGrid"></div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" onclick="restartLevel()">🔄 Restart Level</button>
+                    <button class="btn" onclick="resetProgress()">↺ Reset All Progress</button>
+                </div>
+                
+                <div class="message" id="message"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameBoard = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let score = 0;
+        let isProcessing = false;
+        let currentLevel = 1;
+        let completedLevels = [];
+        let startTime = null;
+        let timerInterval = null;
+
+        const levels = [
+            { size: 4, pairs: 8, difficulty: 'Beginner', baseScore: 100, timeBonus: 5 },
+            { size: 8, pairs: 32, difficulty: 'Expert', baseScore: 150, timeBonus: 3 },
+            { size: 16, pairs: 128, difficulty: 'Master', baseScore: 200, timeBonus: 2 }
+        ];
+
+        // Extended symbol set for large grids
+        const allSymbols = [
+            '🌟', '💎', '🦋', '🌸', '🎭', '🎨', '🎪', '🎯', '🎲', '🎸', '🎺', '🎻', '🎹', '🎤', '🎧', '🎮',
+            '🚀', '⚡', '🔥', '💫', '🌈', '🌙', '☀️', '⭐', '🍀', '🌺', '🌻', '🌷', '🌹', '🌾', '🍄', '🌿',
+            '🎈', '🎊', '🎉', '🎀', '🎁', '🏆', '🥇', '🎖️', '🏅', '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏓',
+            '🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🥝', '🍑', '🥭', '🍍', '🥥', '🥨',
+            '🦄', '🐉', '🦁', '🐯', '🐨', '🐼', '🐸', '🦊', '🐺', '🐮', '🐷', '🐭', '🐹', '🐰', '🦆', '🦓',
+            '💜', '💙', '💚', '💛', '🧡', '❤️', '🤍', '🖤', '🤎', '💗', '💖', '💕', '💓', '💘', '💝', '💟',
+            '🔮', '💰', '👑', '💍', '📿', '📱', '⚔️', '🛡️', '🏹', '🔫', '💣', '🧨', '🔪', '⛏️', '🪓', '🔨',
+            '🌊', '🏔️', '🗻', '🏕️', '🏖️', '🏜️', '🏝️', '🌋', '⛰️', '🗾', '🏞️', '🎑', '🏟️', '🏛️', '🗿', '🏯'
+        ];
+        
+        let _gameStartTime = performance.now();
+function initGame() {
+            startLevel(1);
+        }
+        
+        function startLevel(level) {
+            currentLevel = level;
+            const levelConfig = levels[level - 1];
+            
+            // Create symbol pairs for this level
+            const requiredSymbols = levelConfig.pairs;
+            const levelSymbols = allSymbols.slice(0, requiredSymbols);
+            gameBoard = [...levelSymbols, ...levelSymbols];
+            shuffleArray(gameBoard);
+            
+            flippedCards = [];
+            matchedPairs = 0;
+            moves = 0;
+            score = 0;
+            isProcessing = false;
+            startTime = Date.now();
+            
+            updateDisplay();
+            createGameGrid(levelConfig);
+            hideMessage();
+            updateLevelButtons();
+            startTimer();
+        }
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        function createGameGrid(levelConfig) {
+            const grid = document.getElementById('gameGrid');
+            grid.innerHTML = '';
+            grid.className = `game-grid grid-${levelConfig.size}x${levelConfig.size}`;
+            
+            gameBoard.forEach((symbol, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.index = index;
+                card.dataset.symbol = symbol;
+                card.innerHTML = '?';
+                card.addEventListener('click', () => flipCard(index));
+                grid.appendChild(card);
+            });
+        }
+        
+        function flipCard(index) {
+            if (isProcessing || flippedCards.length >= 2) return;
+            
+            const card = document.querySelector(`[data-index="${index}"]`);
+            if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+            
+            card.classList.add('flipped');
+            card.innerHTML = gameBoard[index];
+            flippedCards.push(index);
+            
+            if (flippedCards.length === 2) {
+                moves++;
+                updateDisplay();
+                checkMatch();
+            }
+        }
+        
+        function checkMatch() {
+            isProcessing = true;
+            const [first, second] = flippedCards;
+            const firstCard = document.querySelector(`[data-index="${first}"]`);
+            const secondCard = document.querySelector(`[data-index="${second}"]`);
+            const levelConfig = levels[currentLevel - 1];
+            
+            setTimeout(() => {
+                if (gameBoard[first] === gameBoard[second]) {
+                    // Match found
+                    firstCard.classList.add('matched');
+                    secondCard.classList.add('matched');
+                    firstCard.classList.remove('flipped');
+                    secondCard.classList.remove('flipped');
+                    
+                    matchedPairs++;
+                    
+                    // Calculate score with time and move bonuses
+                    const timeElapsed = (Date.now() - startTime) / 1000;
+                    const moveBonus = Math.max(100 - moves, 20);
+                    const timeBonus = Math.max(levelConfig.timeBonus * (300 - timeElapsed), 0);
+                    score += levelConfig.baseScore + moveBonus + Math.floor(timeBonus);
+                    
+                    showMessage(`Great match! +${levelConfig.baseScore + moveBonus + Math.floor(timeBonus)} points! 🎉`, 'success');
+                    
+                    if (matchedPairs === levelConfig.pairs) {
+                        setTimeout(() => {
+                            completeLevel();
+                        }, 500);
+                    }
+                } else {
+                    // No match
+                    firstCard.classList.remove('flipped');
+                    secondCard.classList.remove('flipped');
+                    firstCard.innerHTML = '?';
+                    secondCard.innerHTML = '?';
+                    
+                    score = Math.max(0, score - 20);
+                }
+                
+                flippedCards = [];
+                isProcessing = false;
+                updateDisplay();
+            }, 800);
+        }
+        
+        function completeLevel() {
+            stopTimer();
+            const levelConfig = levels[currentLevel - 1];
+            const timeElapsed = Math.floor((Date.now() - startTime) / 1000);
+            
+            // Mark level as completed
+            if (!completedLevels.includes(currentLevel)) {
+                completedLevels.push(currentLevel);
+            }
+            
+            updateLevelButtons();
+            
+            if (currentLevel === 3) {
+                showMessage(`🏆 MASTER COMPLETED! You've conquered all 3 levels! Final Score: ${score} | Time: ${formatTime(timeElapsed)}`, 'win');
+                fetch('/save_score', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ game_name: 'Memory Card Game', score: score, rounds_played: 3, total_rounds: 3, time_taken_ms: Math.round(performance.now() - _gameStartTime) })
+                }).catch(() => {});
+            } else {
+                showMessage(`${levelConfig.difficulty} Level Complete! Score: ${score} | Time: ${formatTime(timeElapsed)} | Next level unlocked!`, 'level-complete');
+                // Do not save partial progress - only save when all 3 levels are completed
+                showMessage(`${levelConfig.difficulty} Level Complete! Score: ${score} | Time: ${formatTime(timeElapsed)} | Complete all 3 levels to save your score!`, 'level-complete');
+            }
+        }
+        
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                if (startTime) {
+                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    document.getElementById('timer').textContent = formatTime(elapsed);
+                }
+            }, 1000);
+        }
+        
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function updateDisplay() {
+            const levelConfig = levels[currentLevel - 1];
+            document.getElementById('currentLevel').textContent = `${currentLevel}/3`;
+            document.getElementById('score').textContent = score.toLocaleString();
+            document.getElementById('moves').textContent = moves;
+            document.getElementById('pairs').textContent = `${matchedPairs}/${levelConfig.pairs}`;
+        }
+        
+        function updateLevelButtons() {
+            const buttons = document.querySelectorAll('.level-btn');
+            buttons.forEach((btn, index) => {
+                const levelNum = index + 1;
+                btn.classList.remove('active', 'completed');
+                
+                if (levelNum === currentLevel) {
+                    btn.classList.add('active');
+                }
+                
+                if (completedLevels.includes(levelNum)) {
+                    btn.classList.add('completed');
+                }
+                
+                // Enable/disable buttons based on progression
+                if (levelNum === 1) {
+                    btn.disabled = false;
+                } else if (levelNum === 2) {
+                    btn.disabled = !completedLevels.includes(1);
+                } else if (levelNum === 3) {
+                    btn.disabled = !completedLevels.includes(2);
+                }
+            });
+        }
+        
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = `message show ${type}`;
+            
+            setTimeout(() => {
+                hideMessage();
+            }, 4000);
+        }
+        
+        function hideMessage() {
+            document.getElementById('message').className = 'message';
+        }
+        
+        function restartLevel() {
+            stopTimer();
+            startLevel(currentLevel);
+        }
+        
+        function resetProgress() {
+            if (confirm('Are you sure you want to reset all progress? This will lock levels 2 and 3 again.')) {
+                stopTimer();
+                completedLevels = [];
+                currentLevel = 1;
+                startLevel(1);
+                showMessage('Progress reset! Starting from Level 1.', 'success');
+            }
+        }
+        
+        // Initialize the game when the page loads
+        initGame();
+    </script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body>
+</html>

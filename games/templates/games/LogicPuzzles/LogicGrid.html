@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logic Grid – NeuroSense</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink-deep: #be185d;
+    --pink-bright: #db2777;
+    --pink-light: #f9a8d4;
+    --pink-pale: #fdf2f8;
+    --pink-mid: #fce7f3;
+    --white: #ffffff;
+    --slate: #1e293b;
+    --slate-mid: #334155;
+    --muted: #64748b;
+    --success: #10b981;
+    --error: #ef4444;
+    --warning: #f59e0b;
+    --cell-yes: #d1fae5;
+    --cell-no: #fee2e2;
+    --cell-yes-border: #10b981;
+    --cell-no-border: #ef4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--pink-pale);
+    min-height: 100vh;
+    color: var(--slate);
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 10% 15%, rgba(219,39,119,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 55% 45% at 90% 80%, rgba(190,24,93,0.09) 0%, transparent 60%),
+      radial-gradient(ellipse 45% 55% at 50% 45%, rgba(249,168,212,0.06) 0%, transparent 55%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--white);
+    box-shadow: 0 2px 16px rgba(190,24,93,0.10);
+    padding: 1rem 2.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 900; color: var(--pink-deep); letter-spacing: -0.02em; }
+  .logo span { color: var(--pink-bright); }
+  .badge {
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    color: white; padding: 0.35rem 1rem; border-radius: 100px;
+    font-size: 0.8rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+
+  /* ── WRAPPER ── */
+  .wrapper {
+    max-width: 940px; margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+    position: relative; z-index: 1;
+  }
+
+  /* ── TITLE ── */
+  .title-block {
+    text-align: center; margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s ease both;
+  }
+  .title-block h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5vw, 3rem);
+    font-weight: 900; color: var(--slate); line-height: 1.1; margin-bottom: 0.6rem;
+  }
+  .title-block h1 em { color: var(--pink-bright); font-style: normal; }
+  .title-block p { color: var(--muted); font-size: 1rem; }
+
+  /* ── SCORE BAR ── */
+  .score-bar {
+    background: var(--white); border-radius: 20px;
+    padding: 1.4rem 2rem;
+    box-shadow: 0 4px 24px rgba(190,24,93,0.08);
+    display: flex; align-items: center; gap: 2rem;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.7s 0.1s ease both;
+    flex-wrap: wrap;
+  }
+  .score-item { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; min-width: 70px; }
+  .score-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .score-value { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: var(--pink-deep); line-height: 1; }
+  .score-value.sm { font-size: 1.3rem; color: var(--slate); }
+
+  .overall-meter { flex: 1; min-width: 200px; }
+  .meter-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; display: flex; justify-content: space-between; }
+  .meter-label span { color: var(--pink-deep); font-size: 1rem; }
+  .meter-track { height: 12px; background: var(--pink-mid); border-radius: 100px; overflow: hidden; }
+  .meter-fill {
+    height: 100%; border-radius: 100px;
+    background: linear-gradient(90deg, var(--pink-bright), var(--pink-deep));
+    transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+    width: 0%; position: relative;
+  }
+  .meter-fill::after {
+    content:''; position:absolute; right:0; top:0; bottom:0;
+    width:6px; background:rgba(255,255,255,0.5); border-radius:100px;
+    animation: pulseGlow 1.5s infinite;
+  }
+
+  /* progress dots */
+  .progress-dots { display: flex; gap: 0.5rem; align-items: center; }
+  .p-dot { width: 10px; height: 10px; border-radius: 100px; background: var(--pink-mid); transition: all 0.3s; flex-shrink: 0; }
+  .p-dot.done { background: var(--success); }
+  .p-dot.fail { background: var(--error); }
+  .p-dot.partial { background: var(--warning); }
+  .p-dot.current { background: var(--pink-bright); width: 22px; }
+
+  /* ── GAME CARD ── */
+  .game-card {
+    background: var(--white); border-radius: 24px;
+    box-shadow: 0 8px 40px rgba(190,24,93,0.10);
+    overflow: hidden;
+    animation: fadeUp 0.8s 0.15s ease both;
+    border: 1.5px solid rgba(219,39,119,0.08);
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    padding: 1.4rem 2rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  }
+  .turn-pill {
+    background: rgba(255,255,255,0.22); color: white;
+    padding: 0.3rem 0.9rem; border-radius: 100px;
+    font-size: 0.82rem; font-weight: 600; letter-spacing: 0.05em;
+  }
+  .cat-tag {
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    color: white; padding: 0.3rem 0.9rem; border-radius: 100px;
+    font-size: 0.78rem; font-weight: 500;
+  }
+  .difficulty-tag {
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.9); padding: 0.25rem 0.75rem; border-radius: 100px;
+    font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+
+  .card-body { padding: 2rem 2rem 2.5rem; }
+
+  /* ── SCENARIO ── */
+  .scenario-box {
+    background: linear-gradient(135deg, rgba(219,39,119,0.04), rgba(190,24,93,0.02));
+    border: 1.5px solid var(--pink-mid);
+    border-radius: 16px; padding: 1.4rem 1.8rem; margin-bottom: 2rem;
+  }
+  .scenario-box .sc-title {
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--pink-bright); margin-bottom: 0.5rem;
+  }
+  .scenario-box .sc-text {
+    font-size: 1rem; font-weight: 500; color: var(--slate); line-height: 1.6;
+  }
+
+  /* ── CLUES ── */
+  .clues-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.85rem; }
+  .clues-list { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; margin-bottom: 2rem; }
+  .clue-item {
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    background: var(--pink-pale); border: 1px solid var(--pink-mid);
+    border-radius: 12px; padding: 0.75rem 1rem;
+    font-size: 0.9rem; color: var(--slate); line-height: 1.5;
+    transition: border-color 0.2s;
+  }
+  .clue-item:hover { border-color: var(--pink-light); }
+  .clue-num {
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    color: white; font-size: 0.7rem; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+  .clue-item.used { opacity: 0.55; border-color: var(--success); background: #f0fdf4; }
+
+  /* ── LOGIC GRID TABLE ── */
+  .grid-section-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.85rem; }
+  .grid-instructions {
+    font-size: 0.82rem; color: var(--muted); margin-bottom: 1.2rem; line-height: 1.5;
+    background: var(--pink-pale); border-radius: 10px; padding: 0.7rem 1rem;
+    border-left: 3px solid var(--pink-bright);
+  }
+
+  .grid-wrap { overflow-x: auto; margin-bottom: 2rem; }
+  .logic-table {
+    border-collapse: collapse; width: 100%; min-width: 340px;
+  }
+  .logic-table th, .logic-table td {
+    border: 1.5px solid var(--pink-mid);
+    text-align: center; vertical-align: middle;
+  }
+  .logic-table thead th {
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    color: white; font-size: 0.78rem; font-weight: 600;
+    padding: 0.6rem 0.5rem; letter-spacing: 0.03em;
+  }
+  .logic-table thead th:first-child { background: var(--pink-pale); color: var(--muted); }
+  .logic-table tbody tr:nth-child(odd) td:first-child { background: var(--pink-pale); }
+  .logic-table tbody tr:nth-child(even) td:first-child { background: var(--pink-mid); }
+  .row-header {
+    font-size: 0.82rem; font-weight: 600; color: var(--slate);
+    padding: 0.65rem 0.9rem; text-align: left; white-space: nowrap;
+  }
+
+  .grid-cell {
+    width: 52px; height: 52px; cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative; user-select: none;
+    background: var(--white);
+  }
+  .grid-cell:hover:not(.locked) { background: var(--pink-pale); transform: scale(1.08); z-index: 2; }
+  .grid-cell.yes { background: var(--cell-yes); border-color: var(--cell-yes-border) !important; }
+  .grid-cell.no  { background: var(--cell-no);  border-color: var(--cell-no-border)  !important; }
+  .grid-cell.locked { cursor: not-allowed; }
+  .grid-cell .cell-mark {
+    font-size: 1.1rem; line-height: 1;
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    transition: all 0.18s;
+  }
+  .grid-cell.yes .cell-mark { color: var(--success); }
+  .grid-cell.no  .cell-mark { color: var(--error); }
+
+  /* ── QUESTION AREA ── */
+  .question-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.85rem; }
+  .question-text {
+    font-size: 1.05rem; font-weight: 600; color: var(--slate);
+    margin-bottom: 1.2rem; line-height: 1.5;
+    padding: 1rem 1.2rem;
+    background: var(--pink-pale); border-radius: 14px; border: 1.5px solid var(--pink-mid);
+  }
+
+  .choices-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem; margin-bottom: 2rem;
+  }
+  .choice-btn {
+    background: var(--white); border: 1.5px solid var(--pink-mid);
+    border-radius: 14px; padding: 0.95rem 1.1rem;
+    text-align: left; cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500;
+    color: var(--slate); display: flex; align-items: center; gap: 0.75rem;
+  }
+  .choice-btn .choice-letter {
+    width: 30px; height: 30px; background: var(--pink-mid); color: var(--pink-deep);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700; flex-shrink: 0; transition: all 0.2s;
+  }
+  .choice-btn:hover { border-color: var(--pink-bright); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(219,39,119,0.12); }
+  .choice-btn:hover .choice-letter { background: var(--pink-bright); color: white; }
+  .choice-btn.selected { border-color: var(--pink-bright); background: var(--pink-pale); }
+  .choice-btn.correct { border-color: var(--success); background: #d1fae5; }
+  .choice-btn.correct .choice-letter { background: var(--success); color: white; }
+  .choice-btn.wrong { border-color: var(--error); background: #fee2e2; }
+  .choice-btn.wrong .choice-letter { background: var(--error); color: white; }
+  .choice-btn:disabled { cursor: not-allowed; transform: none; }
+
+  /* ── SUBMIT ROW ── */
+  .submit-row { display: flex; gap: 1rem; align-items: center; }
+  .btn-submit {
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    color: white; border: none; padding: 0.9rem 2.2rem; border-radius: 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 4px 16px rgba(219,39,119,0.3);
+  }
+  .btn-submit:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(219,39,119,0.4); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-skip {
+    background: none; border: 1.5px solid var(--pink-light);
+    color: var(--pink-deep); padding: 0.9rem 1.5rem; border-radius: 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.92rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-skip:hover { background: var(--pink-mid); }
+
+  /* ── FEEDBACK ── */
+  .feedback-panel {
+    border-radius: 16px; padding: 1.5rem 1.8rem;
+    margin-top: 1.5rem; display: none;
+    animation: fadeUp 0.4s ease both;
+  }
+  .feedback-panel.show { display: block; }
+  .feedback-panel.correct-fb { background: #d1fae5; border: 1.5px solid var(--success); }
+  .feedback-panel.wrong-fb   { background: #fee2e2; border: 1.5px solid var(--error); }
+  .fb-icon { font-size: 1.6rem; margin-bottom: 0.4rem; }
+  .fb-title { font-size: 1rem; font-weight: 700; color: var(--slate); margin-bottom: 0.3rem; }
+  .fb-explain { font-size: 0.9rem; color: var(--muted); line-height: 1.55; }
+  .fb-deduction {
+    margin-top: 0.6rem; font-size: 0.82rem; font-weight: 600; color: var(--slate);
+    background: rgba(16,185,129,0.12); display: inline-block;
+    padding: 0.3rem 0.85rem; border-radius: 100px;
+  }
+  .fb-score {
+    margin-top: 0.5rem; font-size: 0.85rem; font-weight: 600; color: var(--pink-deep);
+    background: rgba(190,24,93,0.08); display: inline-block;
+    padding: 0.25rem 0.75rem; border-radius: 100px; margin-left: 0.4rem;
+  }
+
+  .btn-next {
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    color: white; border: none; padding: 0.75rem 1.8rem; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; margin-top: 1rem;
+    transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 4px 14px rgba(219,39,119,0.28); display: none;
+  }
+  .btn-next:hover { transform: translateY(-2px); }
+  .btn-next.show { display: inline-block; }
+
+  /* ── END SCREEN ── */
+  .end-screen { display: none; text-align: center; padding: 3rem 2rem; animation: fadeUp 0.6s ease both; }
+  .end-screen.show { display: block; }
+  .trophy { font-size: 4.5rem; margin-bottom: 1rem; }
+  .end-screen h2 { font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 900; color: var(--slate); margin-bottom: 0.5rem; }
+  .final-pct {
+    font-family: 'Playfair Display', serif; font-size: 5rem; font-weight: 900;
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; line-height: 1; margin: 0.75rem 0;
+  }
+  .end-msg { font-size: 1rem; color: var(--muted); margin-bottom: 2rem; }
+  .end-stats { display: flex; justify-content: center; gap: 2.5rem; margin: 1.5rem 0; flex-wrap: wrap; }
+  .end-stat .es-val { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--pink-deep); }
+  .end-stat .es-lbl { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 0.2rem; }
+  .btn-restart {
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    color: white; border: none; padding: 1rem 2.5rem; border-radius: 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 6px 20px rgba(219,39,119,0.3);
+  }
+  .btn-restart:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(219,39,119,0.4); }
+
+  /* ── FLOATING BADGE ── */
+  .turn-score-badge {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
+    background: linear-gradient(135deg, var(--pink-bright), var(--pink-deep));
+    color: white; font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 900;
+    padding: 1rem 2.5rem; border-radius: 20px;
+    box-shadow: 0 16px 50px rgba(219,39,119,0.4);
+    z-index: 999; pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease;
+    opacity: 0;
+  }
+  .turn-score-badge.pop { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex; gap: 1.2rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--muted); font-weight: 500; }
+  .legend-swatch {
+    width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid;
+    display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+  }
+  .legend-swatch.yes { background: var(--cell-yes); border-color: var(--cell-yes-border); }
+  .legend-swatch.no  { background: var(--cell-no);  border-color: var(--cell-no-border); }
+  .legend-swatch.blank { background: var(--white); border-color: var(--pink-mid); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulseGlow {
+    0%,100% { opacity: 0.5; }
+    50%      { opacity: 1; }
+  }
+  @keyframes popIn {
+    0%   { transform: scale(0.8); opacity: 0; }
+    60%  { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25%     { transform: translateX(-6px); }
+    75%     { transform: translateX(6px); }
+  }
+
+  @media (max-width: 600px) {
+    .choices-grid { grid-template-columns: 1fr; }
+    .card-body { padding: 1.4rem 1rem; }
+    .score-bar { gap: 1rem; }
+    .grid-cell { width: 42px; height: 42px; }
+  }
+</style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+<div style='padding:10px 20px;background:white;border-bottom:1px solid #e2e8f0'><a href='/logic-puzzles' style='color:#be185d;text-decoration:none;font-weight:600;font-size:.9rem'> Back to Logic Puzzles</a></div>
+
+
+<header class="header">
+  <div class="logo">Neuro<span>Sense</span></div>
+  <div class="badge">Logic Grid</div>
+</header>
+
+<div class="wrapper">
+  <div class="title-block">
+    <h1>Logic <em>Grid</em></h1>
+    <p>Read the clues. Fill the grid. Deduce who owns what.</p>
+  </div>
+
+  <!-- Score Bar -->
+  <div class="score-bar">
+    <div class="score-item">
+      <div class="score-label">Puzzle</div>
+      <div class="score-value" id="turnDisplay">1</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">Solved</div>
+      <div class="score-value" id="correctCount">0</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">This Puzzle</div>
+      <div class="score-value sm" id="turnScoreDisplay">—</div>
+    </div>
+    <div class="overall-meter">
+      <div class="meter-label">
+        <span>Overall Score</span>
+        <span id="pctLabel">0%</span>
+      </div>
+      <div class="meter-track">
+        <div class="meter-fill" id="meterFill"></div>
+      </div>
+    </div>
+    <div class="progress-dots" id="progressDots"></div>
+  </div>
+
+  <!-- Game Card -->
+  <div class="game-card" id="gameCard">
+    <div class="card-header">
+      <span class="turn-pill" id="turnPill">Puzzle 1 of 6</span>
+      <span class="cat-tag" id="catTag">🗂 Category</span>
+      <span class="difficulty-tag" id="diffTag">Easy</span>
+    </div>
+
+    <div class="card-body" id="cardBody">
+
+      <div class="scenario-box">
+        <div class="sc-title">📖 Scenario</div>
+        <div class="sc-text" id="scenarioText">Loading…</div>
+      </div>
+
+      <div class="clues-title">🧩 Clues — use these to fill the grid</div>
+      <ul class="clues-list" id="cluesList"></ul>
+
+      <div class="grid-section-title">📊 Deduction Grid — click cells to mark Yes / No / Clear</div>
+      <div class="grid-instructions" id="gridInstructions">
+        Click a cell once to mark <strong>Yes (○)</strong>, again for <strong>No (✕)</strong>, third click to clear. Each row must have exactly one Yes.
+      </div>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-swatch yes">○</div> Yes — definite match</div>
+        <div class="legend-item"><div class="legend-swatch no">✕</div> No — ruled out</div>
+        <div class="legend-swatch blank"></div>
+        <span style="font-size:0.78rem;color:var(--muted)">Unknown</span>
+      </div>
+
+      <div class="grid-wrap">
+        <table class="logic-table" id="logicTable"></table>
+      </div>
+
+      <div class="question-label">❓ Final Question</div>
+      <div class="question-text" id="questionText">Loading…</div>
+
+      <div class="choices-grid" id="choicesGrid"></div>
+
+      <div class="submit-row">
+        <button class="btn-submit" id="btnSubmit" onclick="submitAnswer()">Confirm Answer</button>
+        <button class="btn-skip" onclick="skipPuzzle()">Skip</button>
+      </div>
+
+      <div class="feedback-panel" id="feedbackPanel">
+        <div class="fb-icon" id="fbIcon"></div>
+        <div class="fb-title" id="fbTitle"></div>
+        <div class="fb-explain" id="fbExplain"></div>
+        <div>
+          <span class="fb-deduction" id="fbDeduction"></span>
+          <span class="fb-score" id="fbScore"></span>
+        </div>
+        <button class="btn-next" id="btnNext" onclick="nextPuzzle()">Next Puzzle →</button>
+      </div>
+
+    </div>
+
+    <!-- End Screen -->
+    <div class="end-screen" id="endScreen">
+      <div class="trophy" id="trophyIcon">🧠</div>
+      <h2 id="endTitle">All Puzzles Complete!</h2>
+      <div class="final-pct" id="finalPct">0%</div>
+      <p class="end-msg" id="endMsg"></p>
+      <div class="end-stats">
+        <div class="end-stat"><div class="es-val" id="esSolved">0</div><div class="es-lbl">Solved</div></div>
+        <div class="end-stat"><div class="es-val" id="esTotal">0</div><div class="es-lbl">Puzzles</div></div>
+        <div class="end-stat"><div class="es-val" id="esBest">—</div><div class="es-lbl">Best Score</div></div>
+      </div>
+      <button class="btn-restart" onclick="restartGame()">Play Again 🔁</button>
+    </div>
+  </div>
+</div>
+
+<div class="turn-score-badge" id="turnBadge"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// PUZZLE BANK  (6 classic logic grid puzzles)
+// ══════════════════════════════════════════════
+const puzzles = [
+
+  // ── PUZZLE 1 ──
+  {
+    category: "Pets & Owners",
+    difficulty: "Easy",
+    scenario: "Three friends — Alice, Bob, and Carol — each own a different pet: a Cat, a Dog, or a Fish. Use the clues to figure out who owns which pet.",
+    rows: ["Alice","Bob","Carol"],
+    cols: ["Cat","Dog","Fish"],
+    // solution[row][col] true = YES
+    solution: [
+      [false, true,  false], // Alice → Dog
+      [false, false, true ], // Bob   → Fish
+      [true,  false, false], // Carol → Cat
+    ],
+    clues: [
+      "Alice does not own the Cat.",
+      "Bob does not own the Dog.",
+      "Carol owns an animal that purrs.",
+    ],
+    question: "Who owns the Dog?",
+    choices: ["Alice","Bob","Carol","Cannot be determined"],
+    correctChoice: 0,
+    explanation: "Clue 3 tells us Carol owns the Cat (purrs). Clue 1 confirms Alice ≠ Cat, and Clue 2 says Bob ≠ Dog, so Bob has the Fish and Alice has the Dog.",
+    deduction: "Carol→Cat, Bob→Fish, Alice→Dog"
+  },
+
+  // ── PUZZLE 2 ──
+  {
+    category: "Jobs & Names",
+    difficulty: "Easy",
+    scenario: "Three colleagues — Dan, Eva, and Fay — work in different roles: Engineer, Designer, or Manager. Deduce each person's role from the clues.",
+    rows: ["Dan","Eva","Fay"],
+    cols: ["Engineer","Designer","Manager"],
+    solution: [
+      [false, true,  false], // Dan     → Designer
+      [false, false, true ], // Eva     → Manager
+      [true,  false, false], // Fay     → Engineer
+    ],
+    clues: [
+      "Fay studied computer science and works with code.",
+      "Dan has a strong eye for colour and typography.",
+      "Eva leads team meetings and sets project deadlines.",
+    ],
+    question: "What is Eva's role?",
+    choices: ["Engineer","Designer","Manager","Analyst"],
+    correctChoice: 2,
+    explanation: "Clue 1 → Fay is Engineer. Clue 2 → Dan is Designer. By elimination Eva must be the Manager, confirmed by Clue 3.",
+    deduction: "Fay→Engineer, Dan→Designer, Eva→Manager"
+  },
+
+  // ── PUZZLE 3 ──
+  {
+    category: "Favourite Colours",
+    difficulty: "Medium",
+    scenario: "Four students — Liam, Mia, Noah, and Olivia — each have a different favourite colour: Red, Blue, Green, or Yellow.",
+    rows: ["Liam","Mia","Noah","Olivia"],
+    cols: ["Red","Blue","Green","Yellow"],
+    solution: [
+      [true,  false, false, false], // Liam   → Red
+      [false, false, true,  false], // Mia    → Green
+      [false, true,  false, false], // Noah   → Blue
+      [false, false, false, true ], // Olivia → Yellow
+    ],
+    clues: [
+      "Liam's favourite is the colour of fire engines.",
+      "Mia dislikes all warm colours (Red and Yellow).",
+      "Noah's favourite is the colour of the sky.",
+      "Olivia's favourite is not Blue or Green.",
+    ],
+    question: "What is Mia's favourite colour?",
+    choices: ["Red","Blue","Green","Yellow"],
+    correctChoice: 2,
+    explanation: "Clue 1: Liam=Red. Clue 3: Noah=Blue. Clue 2: Mia≠Red,≠Yellow → Mia=Green. Clue 4: Olivia≠Blue,≠Green → Olivia=Yellow.",
+    deduction: "Liam→Red, Noah→Blue, Mia→Green, Olivia→Yellow"
+  },
+
+  // ── PUZZLE 4 ──
+  {
+    category: "Floors & Residents",
+    difficulty: "Medium",
+    scenario: "In a four-storey building, four tenants — Priya, Quinn, Raj, and Sara — live on different floors: 1st, 2nd, 3rd, and 4th. Determine who lives on which floor.",
+    rows: ["Priya","Quinn","Raj","Sara"],
+    cols: ["1st","2nd","3rd","4th"],
+    solution: [
+      [false, false, true,  false], // Priya → 3rd
+      [true,  false, false, false], // Quinn → 1st
+      [false, false, false, true ], // Raj   → 4th
+      [false, true,  false, false], // Sara  → 2nd
+    ],
+    clues: [
+      "Quinn lives on the ground floor.",
+      "Raj lives above Priya.",
+      "Sara does not live on the top floor.",
+      "Priya is not on the 1st or 2nd floor.",
+    ],
+    question: "On which floor does Raj live?",
+    choices: ["2nd","3rd","4th","1st"],
+    correctChoice: 2,
+    explanation: "Clue 1: Quinn=1st. Clue 4: Priya≠1st,≠2nd → Priya=3rd or 4th. Clue 2: Raj above Priya → if Priya=3rd, Raj=4th. Clue 3: Sara≠4th → Sara=2nd. All checks out.",
+    deduction: "Quinn→1st, Sara→2nd, Priya→3rd, Raj→4th"
+  },
+
+  // ── PUZZLE 5 ──
+  {
+    category: "Sports & Cities",
+    difficulty: "Hard",
+    scenario: "Three athletes — Alex, Blake, and Casey — each come from a different city (London, Paris, Tokyo) and play a different sport (Tennis, Swimming, Cycling).",
+    rows: ["Alex","Blake","Casey"],
+    cols: ["London","Paris","Tokyo","Tennis","Swimming","Cycling"],
+    solution: [
+      [false, true,  false, false, true,  false], // Alex   → Paris, Swimming
+      [false, false, true,  false, false, true ], // Blake  → Tokyo, Cycling
+      [true,  false, false, true,  false, false], // Casey  → London, Tennis
+    ],
+    clues: [
+      "The athlete from London plays Tennis.",
+      "Alex is not from London.",
+      "Blake does not play Tennis or Swimming.",
+      "The swimmer is from Paris.",
+    ],
+    question: "Which sport does Blake play?",
+    choices: ["Tennis","Swimming","Cycling","Running"],
+    correctChoice: 2,
+    explanation: "Clue 3: Blake≠Tennis,≠Swimming → Blake=Cycling. Clue 4: Swimmer from Paris + Clue 2: Alex≠London → Alex=Paris=Swimming. Casey=London=Tennis (Clue 1). Blake=Tokyo.",
+    deduction: "Casey→London+Tennis, Alex→Paris+Swimming, Blake→Tokyo+Cycling"
+  },
+
+  // ── PUZZLE 6 ──
+  {
+    category: "Birthdays & Months",
+    difficulty: "Hard",
+    scenario: "Four friends — Tara, Uma, Vince, and Will — were born in four different months: March, June, September, or December. Use the clues to find each person's birth month.",
+    rows: ["Tara","Uma","Vince","Will"],
+    cols: ["March","June","September","December"],
+    solution: [
+      [false, true,  false, false], // Tara  → June
+      [false, false, false, true ], // Uma   → December
+      [true,  false, false, false], // Vince → March
+      [false, false, true,  false], // Will  → September
+    ],
+    clues: [
+      "Vince was born in the first quarter of the year.",
+      "Will's birthday is in autumn (Sep, Oct, Nov).",
+      "Tara was not born in March or December.",
+      "Uma celebrates her birthday in the last month of the year.",
+    ],
+    question: "In which month was Tara born?",
+    choices: ["March","June","September","December"],
+    correctChoice: 1,
+    explanation: "Clue 4: Uma=December. Clue 1: Vince=March (only Q1 option). Clue 2: Will=September. Clue 3: Tara≠March,≠December → Tara=June (only remaining).",
+    deduction: "Vince→March, Tara→June, Will→September, Uma→December"
+  }
+];
+
+// ══════════════════════════════════════════════
+// GAME STATE
+// ══════════════════════════════════════════════
+const TOTAL = puzzles.length;
+let currentPuzzle = 0;
+let score = 0;
+let turnScores = [];
+let selectedChoice = null;
+let answered = false;
+// userGrid[r][c] = 0 (blank) | 1 (yes) | -1 (no)
+let userGrid = [];
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+function init() {
+  buildDots();
+  loadPuzzle();
+}
+
+function buildDots() {
+  const c = document.getElementById('progressDots');
+  c.innerHTML = '';
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'p-dot' + (i === 0 ? ' current' : '');
+    d.id = `dot-${i}`;
+    c.appendChild(d);
+  }
+}
+
+function updateDot(result) {
+  // result: 'correct' | 'partial' | 'wrong'
+  const curr = document.getElementById(`dot-${currentPuzzle}`);
+  if (curr) curr.className = 'p-dot ' + (result === 'correct' ? 'done' : result === 'partial' ? 'partial' : 'fail');
+  const next = document.getElementById(`dot-${currentPuzzle + 1}`);
+  if (next) next.classList.add('current');
+}
+
+// ══════════════════════════════════════════════
+// LOAD PUZZLE
+// ══════════════════════════════════════════════
+let _gameStartTime = null;
+function loadPuzzle() {
+  if (!_gameStartTime) _gameStartTime = performance.now();
+  answered = false;
+  selectedChoice = null;
+
+  const p = puzzles[currentPuzzle];
+
+  // Header info
+  document.getElementById('turnDisplay').textContent = currentPuzzle + 1;
+  document.getElementById('turnPill').textContent = `Puzzle ${currentPuzzle + 1} of ${TOTAL}`;
+  document.getElementById('catTag').textContent = `🗂 ${p.category}`;
+  document.getElementById('diffTag').textContent = p.difficulty;
+  document.getElementById('turnScoreDisplay').textContent = '—';
+
+  // Scenario
+  document.getElementById('scenarioText').textContent = p.scenario;
+
+  // Clues
+  const cl = document.getElementById('cluesList');
+  cl.innerHTML = '';
+  p.clues.forEach((clue, i) => {
+    const li = document.createElement('li');
+    li.className = 'clue-item';
+    li.id = `clue-${i}`;
+    li.innerHTML = `<span class="clue-num">${i+1}</span>${clue}`;
+    cl.appendChild(li);
+  });
+
+  // Init user grid
+  userGrid = p.rows.map(() => p.cols.map(() => 0));
+
+  // Build table
+  buildTable(p);
+
+  // Question
+  document.getElementById('questionText').textContent = p.question;
+
+  // Choices
+  const cg = document.getElementById('choicesGrid');
+  cg.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  p.choices.forEach((ch, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerHTML = `<span class="choice-letter">${letters[i]}</span>${ch}`;
+    btn.addEventListener('click', () => selectChoice(i, btn));
+    cg.appendChild(btn);
+  });
+
+  // Reset UI
+  document.getElementById('feedbackPanel').className = 'feedback-panel';
+  document.getElementById('btnNext').className = 'btn-next';
+  document.getElementById('btnSubmit').disabled = false;
+}
+
+// ══════════════════════════════════════════════
+// BUILD TABLE
+// ══════════════════════════════════════════════
+function buildTable(p) {
+  const table = document.getElementById('logicTable');
+  table.innerHTML = '';
+
+  // Header row
+  const thead = document.createElement('thead');
+  const hrow = document.createElement('tr');
+  const corner = document.createElement('th');
+  corner.textContent = '';
+  hrow.appendChild(corner);
+  p.cols.forEach(col => {
+    const th = document.createElement('th');
+    th.textContent = col;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow);
+  table.appendChild(thead);
+
+  // Body rows
+  const tbody = document.createElement('tbody');
+  p.rows.forEach((row, r) => {
+    const tr = document.createElement('tr');
+    const th = document.createElement('th');
+    th.className = 'row-header';
+    th.textContent = row;
+    tr.appendChild(th);
+
+    p.cols.forEach((col, c) => {
+      const td = document.createElement('td');
+      td.className = 'grid-cell';
+      td.id = `cell-${r}-${c}`;
+      const mark = document.createElement('span');
+      mark.className = 'cell-mark';
+      mark.textContent = '';
+      td.appendChild(mark);
+      td.addEventListener('click', () => toggleCell(r, c));
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+// ══════════════════════════════════════════════
+// TOGGLE CELL
+// ══════════════════════════════════════════════
+function toggleCell(r, c) {
+  if (answered) return;
+  const p = puzzles[currentPuzzle];
+  // Cycle: 0 → 1 (yes) → -1 (no) → 0
+  const current = userGrid[r][c];
+  let next = current === 0 ? 1 : current === 1 ? -1 : 0;
+
+  // If setting yes, auto-clear other yes in same row
+  if (next === 1) {
+    p.cols.forEach((_, cc) => {
+      if (cc !== c && userGrid[r][cc] === 1) {
+        userGrid[r][cc] = 0;
+        renderCell(r, cc, 0);
+      }
+    });
+    // Also auto-set no for same column if another row had yes
+    p.rows.forEach((_, rr) => {
+      if (rr !== r && userGrid[rr][c] === 1) {
+        userGrid[rr][c] = -1;
+        renderCell(rr, c, -1);
+      }
+    });
+  }
+
+  userGrid[r][c] = next;
+  renderCell(r, c, next);
+}
+
+function renderCell(r, c, val) {
+  const cell = document.getElementById(`cell-${r}-${c}`);
+  const mark = cell.querySelector('.cell-mark');
+  cell.className = 'grid-cell' + (val === 1 ? ' yes' : val === -1 ? ' no' : '');
+  mark.textContent = val === 1 ? '○' : val === -1 ? '✕' : '';
+}
+
+// ══════════════════════════════════════════════
+// CHOICE SELECTION
+// ══════════════════════════════════════════════
+function selectChoice(index, btn) {
+  if (answered) return;
+  selectedChoice = index;
+  document.querySelectorAll('.choice-btn').forEach(e => e.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+// ══════════════════════════════════════════════
+// SUBMIT
+// ══════════════════════════════════════════════
+function submitAnswer() {
+  if (answered) return;
+  if (selectedChoice === null) {
+    alert('Please select an answer to the final question!');
+    return;
+  }
+  answered = true;
+  document.getElementById('btnSubmit').disabled = false;
+  document.getElementById('btnSubmit').disabled = true;
+
+  const p = puzzles[currentPuzzle];
+  const answerCorrect = selectedChoice === p.correctChoice;
+
+  // Score grid accuracy
+  let gridCorrect = 0, gridTotal = 0;
+  p.rows.forEach((_, r) => {
+    p.cols.forEach((_, c) => {
+      gridTotal++;
+      const expected = p.solution[r][c] ? 1 : -1;
+      if (userGrid[r][c] === expected) gridCorrect++;
+    });
+  });
+  const gridPct = Math.round((gridCorrect / gridTotal) * 100);
+
+  // Final turn score: 60% from answer + 40% from grid
+  let pts = 0;
+  if (answerCorrect) pts += 60;
+  pts += Math.round(gridPct * 0.4);
+  pts = Math.min(pts, 100);
+
+  turnScores.push(pts);
+  if (answerCorrect) score++;
+
+  // Reveal grid solution
+  p.rows.forEach((_, r) => {
+    p.cols.forEach((_, c) => {
+      const expected = p.solution[r][c] ? 1 : -1;
+      const cell = document.getElementById(`cell-${r}-${c}`);
+      if (cell) {
+        cell.classList.add('locked');
+        renderCell(r, c, expected);
+      }
+    });
+  });
+
+  // Highlight choices
+  document.querySelectorAll('.choice-btn').forEach((btn, i) => {
+    if (i === p.correctChoice) btn.classList.add('correct');
+    else if (i === selectedChoice && !answerCorrect) btn.classList.add('wrong');
+    btn.disabled = true;
+  });
+
+  document.getElementById('turnScoreDisplay').textContent = `${pts}%`;
+  showBadge(pts);
+  showFeedback(answerCorrect, pts, p, gridPct);
+  updateOverall();
+
+  const result = pts >= 80 ? 'correct' : pts >= 40 ? 'partial' : 'wrong';
+  updateDot(result);
+}
+
+// ══════════════════════════════════════════════
+// FEEDBACK
+// ══════════════════════════════════════════════
+function showFeedback(answerCorrect, pts, p, gridPct) {
+  const fp = document.getElementById('feedbackPanel');
+  fp.className = 'feedback-panel show ' + (answerCorrect ? 'correct-fb' : 'wrong-fb');
+
+  document.getElementById('fbIcon').textContent = answerCorrect ? '🎉' : '🔍';
+  document.getElementById('fbTitle').textContent = answerCorrect
+    ? (pts >= 90 ? 'Perfect deduction!' : 'Correct answer!')
+    : 'Not quite — here is the solution:';
+  document.getElementById('fbExplain').textContent = p.explanation;
+  document.getElementById('fbDeduction').textContent = `🗺 ${p.deduction}`;
+  document.getElementById('fbScore').textContent = `Turn Score: ${pts}% (Grid ${gridPct}% · Answer ${answerCorrect ? '60' : '0'}pts)`;
+  document.getElementById('btnNext').className = 'btn-next show';
+}
+
+function showBadge(pct) {
+  const badge = document.getElementById('turnBadge');
+  badge.textContent = `${pct}%`;
+  badge.classList.add('pop');
+  setTimeout(() => badge.classList.remove('pop'), 1500);
+}
+
+function updateOverall() {
+  const total = turnScores.reduce((a, b) => a + b, 0);
+  const pct = turnScores.length ? Math.round(total / turnScores.length) : 0;
+  document.getElementById('pctLabel').textContent = `${pct}%`;
+  document.getElementById('meterFill').style.width = `${pct}%`;
+  document.getElementById('correctCount').textContent = score;
+}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function nextPuzzle() {
+  currentPuzzle++;
+  if (currentPuzzle >= TOTAL) {
+    showEnd();
+  } else {
+    const body = document.getElementById('cardBody');
+    body.style.opacity = '0';
+    body.style.transform = 'translateY(20px)';
+    body.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    setTimeout(() => {
+      loadPuzzle();
+      body.style.opacity = '1';
+      body.style.transform = 'translateY(0)';
+    }, 280);
+  }
+}
+
+function skipPuzzle() {
+  if (answered) return;
+  turnScores.push(0);
+  updateDot('wrong');
+  updateOverall();
+  currentPuzzle++;
+  if (currentPuzzle >= TOTAL) showEnd();
+  else loadPuzzle();
+}
+
+function showEnd() {
+  document.getElementById('cardBody').style.display = 'none';
+  const es = document.getElementById('endScreen');
+  es.classList.add('show');
+
+  const overall = turnScores.length ? Math.round(turnScores.reduce((a,b)=>a+b,0) / turnScores.length) : 0;
+  const best = turnScores.length ? Math.max(...turnScores) : 0;
+
+  document.getElementById('finalPct').textContent = `${overall}%`;
+  document.getElementById('esSolved').textContent = score;
+  document.getElementById('esTotal').textContent = TOTAL;
+  document.getElementById('esBest').textContent = `${best}%`;
+  document.getElementById('trophyIcon').textContent = overall >= 80 ? '🏆' : overall >= 50 ? '🧠' : '💪';
+  document.getElementById('endTitle').textContent = overall >= 80 ? 'Master Logician!' : overall >= 50 ? 'Sharp Thinker!' : 'Keep Deducing!';
+  document.getElementById('endMsg').textContent = overall >= 80
+    ? 'Your deduction skills are razor-sharp. Exceptional!'
+    : overall >= 50
+    ? 'Solid logic work — a few more puzzles and you\'ll master the grid.'
+    : 'Every puzzle trains your mind. Try again!';
+
+  document.getElementById('pctLabel').textContent = `${overall}%`;
+  document.getElementById('meterFill').style.width = `${overall}%`;
+
+  fetch('/save_score', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ game_name: 'Logic Grid', score: overall, rounds_played: turnScores.length, total_rounds: turnScores.length, time_taken_ms: Math.round(performance.now() - _gameStartTime) })
+  }).catch(() => {});
+}
+
+function restartGame() {
+  _gameStartTime = null;
+  currentPuzzle = 0; score = 0; turnScores = [];
+  selectedChoice = null; answered = false; userGrid = [];
+
+  document.getElementById('endScreen').className = 'end-screen';
+  const body = document.getElementById('cardBody');
+  body.style.display = '';
+  body.style.opacity = '1';
+  body.style.transform = '';
+  body.style.transition = '';
+  document.getElementById('correctCount').textContent = '0';
+  document.getElementById('pctLabel').textContent = '0%';
+  document.getElementById('meterFill').style.width = '0%';
+
+  buildDots();
+  loadPuzzle();
+}
+
+init();
+</script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body>
+</html>

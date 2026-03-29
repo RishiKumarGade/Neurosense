@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reason Path – NeuroSense</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --pink-deep:   #be185d;
+      --pink-bright: #db2777;
+      --pink-light:  #fdf2f8;
+      --pink-mid:    #fce7f3;
+      --pink-border: #fbcfe8;
+      --slate:       #1e293b;
+      --slate-mid:   #475569;
+      --slate-soft:  #64748b;
+      --white:       #ffffff;
+      --grad: linear-gradient(135deg, #db2777, #be185d);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--pink-light);
+      color: var(--slate);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--white);
+      box-shadow: 0 2px 10px rgba(190,24,93,.1);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky; top:0; z-index:50;
+    }
+    .logo { font-family:'DM Serif Display',serif; font-size:1.6rem; color:var(--pink-deep); }
+    .back-btn {
+      background:none; border:2px solid var(--pink-deep);
+      color:var(--pink-deep); font-family:'DM Sans',sans-serif;
+      font-weight:600; font-size:.85rem; padding:.4rem 1rem;
+      border-radius:8px; cursor:pointer; transition:.2s;
+    }
+    .back-btn:hover { background:var(--pink-deep); color:#fff; }
+
+    /* ── HERO BANNER ── */
+    .hero {
+      background: var(--grad);
+      border-radius: 24px;
+      margin: 2rem;
+      padding: 2.5rem 2rem;
+      color:#fff;
+      display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:1rem;
+    }
+    .hero-left h1 { font-family:'DM Serif Display',serif; font-size:2.2rem; }
+    .hero-left p  { opacity:.9; margin-top:.4rem; font-size:1rem; }
+    .score-bubble {
+      background:rgba(255,255,255,.18);
+      border:2px solid rgba(255,255,255,.35);
+      border-radius:20px;
+      padding:1rem 2rem;
+      text-align:center;
+    }
+    .score-bubble .score-num {
+      font-family:'DM Serif Display',serif;
+      font-size:2.8rem; line-height:1;
+    }
+    .score-bubble .score-label { font-size:.8rem; opacity:.85; letter-spacing:.08em; text-transform:uppercase; }
+
+    /* ── LEVEL BADGE ── */
+    .meta-bar {
+      display:flex; align-items:center; gap:1rem;
+      padding:.6rem 2rem;
+    }
+    .badge {
+      background:var(--pink-mid); color:var(--pink-deep);
+      font-weight:700; font-size:.8rem; padding:.3rem .85rem;
+      border-radius:999px; letter-spacing:.06em; text-transform:uppercase;
+    }
+    .progress-wrap { flex:1; max-width:280px; }
+    .progress-track {
+      background:var(--pink-border);
+      border-radius:999px; height:8px; overflow:hidden;
+    }
+    .progress-fill {
+      background:var(--grad);
+      height:100%; border-radius:999px;
+      transition: width .5s ease;
+    }
+    .progress-label { font-size:.75rem; color:var(--slate-soft); margin-top:.25rem; }
+
+    /* ── GAME AREA ── */
+    .game-area { padding: 0 2rem 2rem; }
+
+    /* scenario card */
+    .scenario-card {
+      background:var(--white);
+      border-radius:20px;
+      box-shadow: 0 4px 20px rgba(190,24,93,.08);
+      padding:2rem;
+      margin-bottom:1.5rem;
+      border:2px solid var(--pink-border);
+      animation: fadeIn .4s ease;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+
+    .scenario-tag {
+      display:inline-block; background:var(--pink-mid);
+      color:var(--pink-deep); font-size:.75rem; font-weight:700;
+      text-transform:uppercase; letter-spacing:.08em;
+      padding:.25rem .75rem; border-radius:999px; margin-bottom:.75rem;
+    }
+    .scenario-goal {
+      font-family:'DM Serif Display',serif;
+      font-size:1.4rem; color:var(--slate); margin-bottom:.5rem;
+    }
+    .scenario-context {
+      color:var(--slate-mid); font-size:.9rem; line-height:1.6;
+    }
+
+    /* steps chain */
+    .chain-title {
+      font-weight:700; font-size:.85rem; text-transform:uppercase;
+      letter-spacing:.08em; color:var(--slate-soft);
+      margin-bottom:.75rem;
+    }
+
+    .path-chain {
+      display:flex; flex-wrap:wrap; align-items:center; gap:.5rem;
+      min-height:52px;
+      background:var(--pink-mid);
+      border:2px dashed var(--pink-border);
+      border-radius:14px; padding:.75rem 1rem;
+      margin-bottom:1.5rem;
+      transition: border-color .2s;
+    }
+    .path-chain.dragover { border-color:var(--pink-bright); background:var(--pink-light); }
+
+    .step-chip {
+      background:var(--grad);
+      color:#fff; font-size:.85rem; font-weight:600;
+      padding:.4rem .9rem; border-radius:10px;
+      display:flex; align-items:center; gap:.4rem;
+      cursor:default;
+      animation: popIn .25s ease;
+      position:relative;
+    }
+    @keyframes popIn { from{transform:scale(.8);opacity:0} to{transform:scale(1);opacity:1} }
+
+    .step-chip .chip-num {
+      background:rgba(255,255,255,.25);
+      border-radius:6px; padding:.1rem .35rem; font-size:.72rem;
+    }
+    .step-chip .chip-remove {
+      background:none; border:none; color:#fff; cursor:pointer;
+      font-size:.85rem; padding:0 .1rem; opacity:.7; transition:.2s;
+    }
+    .step-chip .chip-remove:hover { opacity:1; }
+
+    .chain-arrow {
+      color:var(--pink-deep); font-size:1.1rem; font-weight:700;
+    }
+
+    .empty-hint { color:var(--slate-soft); font-size:.85rem; font-style:italic; }
+
+    /* options */
+    .options-grid {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+      gap:1rem; margin-bottom:1.5rem;
+    }
+
+    .option-card {
+      background:var(--white);
+      border:2px solid var(--pink-border);
+      border-radius:14px; padding:1rem 1.2rem;
+      cursor:pointer; transition: all .2s;
+      display:flex; align-items:flex-start; gap:.75rem;
+      user-select:none;
+    }
+    .option-card:hover {
+      border-color:var(--pink-bright);
+      box-shadow:0 4px 16px rgba(219,39,119,.12);
+      transform:translateY(-2px);
+    }
+    .option-card.selected {
+      border-color:var(--pink-deep);
+      background:var(--pink-mid);
+    }
+    .option-card.correct {
+      border-color:#16a34a; background:#f0fdf4;
+    }
+    .option-card.incorrect {
+      border-color:#dc2626; background:#fef2f2;
+    }
+    .option-card.disabled { pointer-events:none; opacity:.55; }
+
+    .opt-icon {
+      width:36px; height:36px; border-radius:8px;
+      background:var(--pink-mid); color:var(--pink-deep);
+      display:flex; align-items:center; justify-content:center;
+      font-size:1rem; flex-shrink:0;
+    }
+    .option-card.correct .opt-icon { background:#dcfce7; color:#16a34a; }
+    .option-card.incorrect .opt-icon { background:#fee2e2; color:#dc2626; }
+
+    .opt-text { font-size:.9rem; line-height:1.45; color:var(--slate); }
+    .opt-tag {
+      display:inline-block; font-size:.7rem; font-weight:700;
+      text-transform:uppercase; letter-spacing:.06em;
+      padding:.15rem .5rem; border-radius:6px; margin-bottom:.25rem;
+    }
+    .tag-relevant   { background:#fce7f3; color:#be185d; }
+    .tag-irrelevant { background:#fef9c3; color:#92400e; }
+    .tag-harmful    { background:#fee2e2; color:#dc2626; }
+
+    /* action buttons */
+    .actions { display:flex; gap:1rem; flex-wrap:wrap; }
+    .btn-primary {
+      background:var(--grad); color:#fff;
+      border:none; border-radius:10px; padding:.75rem 1.75rem;
+      font-family:'DM Sans',sans-serif; font-weight:700; font-size:.95rem;
+      cursor:pointer; transition: all .2s;
+    }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(190,24,93,.3); }
+    .btn-primary:disabled { opacity:.4; cursor:default; transform:none; box-shadow:none; }
+    .btn-outline {
+      background:none; border:2px solid var(--pink-deep);
+      color:var(--pink-deep); border-radius:10px;
+      padding:.7rem 1.5rem;
+      font-family:'DM Sans',sans-serif; font-weight:700; font-size:.95rem;
+      cursor:pointer; transition:.2s;
+    }
+    .btn-outline:hover { background:var(--pink-mid); }
+
+    /* feedback panel */
+    .feedback-panel {
+      background:var(--white); border-radius:16px; padding:1.5rem;
+      margin-top:1rem; border:2px solid var(--pink-border);
+      display:none;
+    }
+    .feedback-panel.show { display:block; animation:fadeIn .3s ease; }
+    .feedback-panel.pass { border-color:#16a34a; }
+    .feedback-panel.fail { border-color:#dc2626; }
+    .feedback-title { font-family:'DM Serif Display',serif; font-size:1.3rem; margin-bottom:.5rem; }
+    .feedback-title.pass { color:#16a34a; }
+    .feedback-title.fail { color:#dc2626; }
+    .feedback-body { color:var(--slate-mid); font-size:.9rem; line-height:1.6; }
+
+    /* scoreboard */
+    .scoreboard {
+      display:none;
+      flex-direction:column; align-items:center; justify-content:center;
+      background:var(--white); border-radius:24px; padding:3rem 2rem;
+      text-align:center; border:2px solid var(--pink-border);
+      box-shadow:0 8px 32px rgba(190,24,93,.1);
+      animation:fadeIn .5s ease;
+    }
+    .scoreboard.show { display:flex; }
+    .scoreboard-emoji { font-size:4rem; margin-bottom:1rem; }
+    .scoreboard h2 { font-family:'DM Serif Display',serif; font-size:2rem; margin-bottom:.5rem; }
+    .scoreboard p { color:var(--slate-mid); margin-bottom:1.5rem; }
+    .big-score {
+      font-family:'DM Serif Display',serif; font-size:5rem; line-height:1;
+      background: var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      margin-bottom:.25rem;
+    }
+    .score-breakdown {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; width:100%; max-width:360px; margin-bottom:1.5rem;
+    }
+    .breakdown-item {
+      background:var(--pink-mid); border-radius:12px; padding:1rem;
+    }
+    .breakdown-num { font-family:'DM Serif Display',serif; font-size:1.8rem; color:var(--pink-deep); }
+    .breakdown-lbl { font-size:.75rem; color:var(--slate-soft); text-transform:uppercase; letter-spacing:.06em; }
+
+    @media(max-width:600px){
+      .hero { margin:1rem; padding:1.5rem; }
+      .game-area { padding:0 1rem 1rem; }
+      .meta-bar { padding:.6rem 1rem; }
+      .hero-left h1 { font-size:1.6rem; }
+      .score-num { font-size:2rem !important; }
+    }
+  </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">NeuroSense</div>
+  <button class="back-btn" onclick="window.location.href='/logic-puzzles'">← Back</button>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-left">
+    <h1>🧭 Reason Path</h1>
+    <p>Choose the correct logical steps to reach the goal</p>
+  </div>
+  <div class="score-bubble">
+    <div class="score-num" id="liveScore">0</div>
+    <div class="score-label">Overall Score</div>
+  </div>
+</div>
+
+<!-- META BAR -->
+<div class="meta-bar">
+  <span class="badge" id="levelBadge">Level 1</span>
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="progress-label" id="progressLabel">Question 0 of 5</div>
+  </div>
+</div>
+
+<!-- GAME AREA -->
+<div class="game-area">
+
+  <!-- SCENARIO CARD -->
+  <div class="scenario-card" id="scenarioCard">
+    <div class="scenario-tag" id="scenarioTag">Category</div>
+    <div class="scenario-goal" id="scenarioGoal">Goal text…</div>
+    <div class="scenario-context" id="scenarioContext">Context text…</div>
+  </div>
+
+  <!-- PATH CHAIN -->
+  <div class="chain-title">Your Reasoning Path</div>
+  <div class="path-chain" id="pathChain">
+    <span class="empty-hint">Select the correct steps below in order →</span>
+  </div>
+
+  <!-- OPTIONS GRID -->
+  <div class="chain-title">Available Steps</div>
+  <div class="options-grid" id="optionsGrid"></div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="btn-primary" id="submitBtn" onclick="submitAnswer()" disabled>Check Path</button>
+    <button class="btn-outline" id="clearBtn" onclick="clearPath()">Clear</button>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="feedback-panel" id="feedbackPanel">
+    <div class="feedback-title" id="feedbackTitle"></div>
+    <div class="feedback-body" id="feedbackBody"></div>
+  </div>
+
+  <!-- NEXT BTN (hidden until after answer) -->
+  <div style="margin-top:1rem; display:none;" id="nextWrap">
+    <button class="btn-primary" onclick="nextQuestion()">Next Question →</button>
+  </div>
+
+  <!-- SCOREBOARD -->
+  <div class="scoreboard" id="scoreboard">
+    <div class="scoreboard-emoji" id="sbEmoji">🏆</div>
+    <h2 id="sbTitle">Game Complete!</h2>
+    <p id="sbSubtitle">Here's how you did</p>
+    <div class="big-score" id="sbBigScore">0</div>
+    <div style="color:var(--slate-soft);font-size:.85rem;margin-bottom:1.5rem;">Overall Score</div>
+    <div class="score-breakdown">
+      <div class="breakdown-item">
+        <div class="breakdown-num" id="sbCorrect">0</div>
+        <div class="breakdown-lbl">Correct</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="breakdown-num" id="sbWrong">0</div>
+        <div class="breakdown-lbl">Wrong</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="breakdown-num" id="sbLevels">0</div>
+        <div class="breakdown-lbl">Levels</div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="restartGame()">Play Again</button>
+  </div>
+
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+
+const levels = [
+  {
+    id: 1,
+    category: "Daily Planning",
+    goal: "Goal: Start your morning productively",
+    context: "You wake up 30 minutes before you need to leave. You want to have a productive, calm start to the day.",
+    correctOrder: ["Wake up & turn off alarm", "Drink a glass of water", "Quick 5-min stretch", "Shower and get dressed", "Eat a light breakfast"],
+    distractors: [
+      { text: "Scroll social media for 20 mins", type: "harmful" },
+      { text: "Skip breakfast to save time", type: "irrelevant" },
+      { text: "Watch TV until last minute", type: "harmful" }
+    ],
+    explanation: "A calm morning begins with hydration, movement, hygiene, and nourishment — in a logical order that sets up energy and focus."
+  },
+  {
+    id: 2,
+    category: "Problem Solving",
+    goal: "Goal: Fix a flat tyre safely on a country road",
+    context: "You're alone, it's daytime, and your tyre is flat. You have a spare tyre and basic tools in the boot.",
+    correctOrder: ["Move car to safe flat ground", "Turn on hazard lights", "Loosen wheel nuts slightly", "Jack up the car", "Remove flat & fit spare"],
+    distractors: [
+      { text: "Drive slowly to the next town", type: "harmful" },
+      { text: "Call someone to chat about it", type: "irrelevant" },
+      { text: "Jack up the car first without loosening nuts", type: "harmful" }
+    ],
+    explanation: "Safety first — hazards on, stable surface. Then loosen nuts before lifting to avoid wheel spin. Jack, swap, tighten."
+  },
+  {
+    id: 3,
+    category: "Decision Making",
+    goal: "Goal: Choose the best laptop for your budget",
+    context: "You need a laptop for work. Your budget is ₹60,000. You'll use it mainly for documents, video calls and light photo editing.",
+    correctOrder: ["Define your must-have specs", "Research reviews for that use-case", "Shortlist 3 models in budget", "Compare warranty & support", "Make purchase decision"],
+    distractors: [
+      { text: "Buy the most expensive one you find", type: "harmful" },
+      { text: "Decide based only on brand name", type: "irrelevant" },
+      { text: "Ask friends without defining your needs", type: "irrelevant" }
+    ],
+    explanation: "Good decisions start with clearly defined needs, then research, shortlisting, and comparing value — not impulse."
+  },
+  {
+    id: 4,
+    category: "Health & Wellness",
+    goal: "Goal: Recover well after an intense workout",
+    context: "You've just finished a hard 1-hour gym session. You want to recover properly and be ready for tomorrow.",
+    correctOrder: ["Cool-down stretches for 5 mins", "Rehydrate with water or electrolytes", "Eat a protein-rich meal within 1 hour", "Rest or light activity only", "Sleep 7–8 hours"],
+    distractors: [
+      { text: "Do another intense workout immediately", type: "harmful" },
+      { text: "Skip eating to lose more weight", type: "harmful" },
+      { text: "Stay up late on your phone", type: "harmful" }
+    ],
+    explanation: "Recovery is: cool down → hydrate → refuel → rest → sleep. Skipping any step impairs muscle repair and energy restoration."
+  },
+  {
+    id: 5,
+    category: "Critical Thinking",
+    goal: "Goal: Evaluate whether a news story is reliable",
+    context: "You see a shocking news headline shared by a friend. Before sharing it further, you want to check if it's reliable.",
+    correctOrder: ["Check the source / publication", "Read the full article (not just headline)", "Look for corroborating sources", "Check the date of the article", "Form a conclusion & decide to share or not"],
+    distractors: [
+      { text: "Share immediately because it's shocking", type: "harmful" },
+      { text: "Trust it because a friend shared it", type: "irrelevant" },
+      { text: "Only read the headline", type: "harmful" }
+    ],
+    explanation: "Media literacy demands source-checking, full reading, cross-referencing, and date-checking before forming a conclusion."
+  }
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+
+let currentLevel = 0;
+let selectedPath  = [];   // texts chosen by user
+let score         = 0;
+let correct       = 0;
+let wrong         = 0;
+let answered      = false;
+
+const POINTS_PER_CORRECT = 20;
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+
+let _gameStartTime = null;
+function loadLevel() {
+  if (!_gameStartTime) _gameStartTime = performance.now();
+  answered = false;
+  selectedPath = [];
+
+  const lvl = levels[currentLevel];
+  if (!lvl) { showScoreboard(); return; }
+
+  // update meta
+  document.getElementById('levelBadge').textContent    = `Level ${lvl.id}`;
+  document.getElementById('progressLabel').textContent = `Question ${currentLevel+1} of ${levels.length}`;
+  document.getElementById('progressFill').style.width  = `${((currentLevel)/levels.length)*100}%`;
+
+  // scenario
+  document.getElementById('scenarioTag').textContent     = lvl.category;
+  document.getElementById('scenarioGoal').textContent    = lvl.goal;
+  document.getElementById('scenarioContext').textContent = lvl.context;
+
+  // reset path chain
+  renderChain();
+
+  // build options = shuffle correct + distractors
+  const allOptions = [
+    ...lvl.correctOrder.map(t => ({ text:t, type:'relevant' })),
+    ...lvl.distractors
+  ];
+  shuffle(allOptions);
+
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  allOptions.forEach(opt => {
+    const card = document.createElement('div');
+    card.className = 'option-card';
+    card.dataset.text = opt.text;
+    card.dataset.type = opt.type;
+    card.innerHTML = `
+      <div class="opt-icon">${iconFor(opt.type)}</div>
+      <div class="opt-text">
+        <div class="opt-tag tag-${opt.type}">${opt.type}</div>
+        ${opt.text}
+      </div>`;
+    card.addEventListener('click', () => toggleOption(card, opt));
+    grid.appendChild(card);
+  });
+
+  // feedback & next
+  const fp = document.getElementById('feedbackPanel');
+  fp.className = 'feedback-panel';
+  document.getElementById('nextWrap').style.display = 'none';
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('clearBtn').style.display = '';
+
+  // show game, hide scoreboard
+  document.getElementById('scenarioCard').style.display = '';
+  document.getElementById('scoreboard').classList.remove('show');
+}
+
+function iconFor(type) {
+  return type === 'relevant' ? '✅' : type === 'harmful' ? '⚠️' : '↩️';
+}
+
+// ─── OPTION TOGGLE ───────────────────────────────────────────────────────────
+
+function toggleOption(card, opt) {
+  if (answered) return;
+  if (opt.type !== 'relevant') {
+    // allow selecting but mark as a distractor choice
+  }
+  const idx = selectedPath.indexOf(opt.text);
+  if (idx === -1) {
+    selectedPath.push(opt.text);
+    card.classList.add('selected');
+  } else {
+    selectedPath.splice(idx, 1);
+    card.classList.remove('selected');
+  }
+  renderChain();
+  const lvl = levels[currentLevel];
+  document.getElementById('submitBtn').disabled = selectedPath.length !== lvl.correctOrder.length;
+}
+
+// ─── CHAIN RENDER ────────────────────────────────────────────────────────────
+
+function renderChain() {
+  const chain = document.getElementById('pathChain');
+  if (selectedPath.length === 0) {
+    chain.innerHTML = '<span class="empty-hint">Select the correct steps below in order →</span>';
+    return;
+  }
+  chain.innerHTML = '';
+  selectedPath.forEach((text, i) => {
+    if (i > 0) {
+      const arr = document.createElement('span');
+      arr.className = 'chain-arrow'; arr.textContent = '→';
+      chain.appendChild(arr);
+    }
+    const chip = document.createElement('div');
+    chip.className = 'step-chip';
+    chip.innerHTML = `<span class="chip-num">${i+1}</span>${text}<button class="chip-remove" onclick="removeStep(${i})">✕</button>`;
+    chain.appendChild(chip);
+  });
+}
+
+function removeStep(i) {
+  if (answered) return;
+  const text = selectedPath[i];
+  selectedPath.splice(i, 1);
+  // deselect card
+  document.querySelectorAll('.option-card').forEach(c => {
+    if (c.dataset.text === text) c.classList.remove('selected');
+  });
+  renderChain();
+  const lvl = levels[currentLevel];
+  document.getElementById('submitBtn').disabled = selectedPath.length !== lvl.correctOrder.length;
+}
+
+function clearPath() {
+  if (answered) return;
+  selectedPath = [];
+  document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+  renderChain();
+  document.getElementById('submitBtn').disabled = true;
+}
+
+// ─── SUBMIT ──────────────────────────────────────────────────────────────────
+
+function submitAnswer() {
+  if (answered) return;
+  answered = true;
+  const lvl    = levels[currentLevel];
+  const isPass = JSON.stringify(selectedPath) === JSON.stringify(lvl.correctOrder);
+
+  // colour options
+  document.querySelectorAll('.option-card').forEach(card => {
+    card.classList.add('disabled');
+    const text = card.dataset.text;
+    const type = card.dataset.type;
+    if (type === 'relevant') {
+      // correct step — mark green
+      card.classList.add('correct');
+    } else if (selectedPath.includes(text)) {
+      // user chose a distractor
+      card.classList.add('incorrect');
+    }
+  });
+
+  if (isPass) {
+    score   += POINTS_PER_CORRECT;
+    correct += 1;
+    document.getElementById('liveScore').textContent = score;
+    showFeedback('pass', '🎉 Correct Path!', lvl.explanation);
+  } else {
+    wrong += 1;
+    const correctAnswer = lvl.correctOrder.join(' → ');
+    showFeedback('fail', '❌ Not Quite', `The correct path was: ${correctAnswer}. ${lvl.explanation}`);
+  }
+
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('clearBtn').style.display = 'none';
+  document.getElementById('nextWrap').style.display = 'block';
+  document.getElementById('progressFill').style.width = `${((currentLevel+1)/levels.length)*100}%`;
+}
+
+function showFeedback(type, title, body) {
+  const fp = document.getElementById('feedbackPanel');
+  const ft = document.getElementById('feedbackTitle');
+  const fb = document.getElementById('feedbackBody');
+  fp.className = `feedback-panel show ${type}`;
+  ft.className = `feedback-title ${type}`;
+  ft.textContent = title;
+  fb.textContent = body;
+}
+
+// ─── NEXT ────────────────────────────────────────────────────────────────────
+
+function nextQuestion() {
+  currentLevel++;
+  if (currentLevel >= levels.length) { showScoreboard(); return; }
+  loadLevel();
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+// ─── SCOREBOARD ──────────────────────────────────────────────────────────────
+
+function showScoreboard() {
+  document.getElementById('scenarioCard').style.display = 'none';
+  document.getElementById('optionsGrid').innerHTML      = '';
+  document.getElementById('pathChain').innerHTML        = '';
+  document.getElementById('feedbackPanel').className    = 'feedback-panel';
+  document.getElementById('nextWrap').style.display     = 'none';
+  document.querySelectorAll('.chain-title').forEach(e => e.style.display = 'none');
+  document.querySelectorAll('.actions').forEach(e => e.style.display = 'none');
+  document.getElementById('progressFill').style.width   = '100%';
+  document.getElementById('progressLabel').textContent  = `All ${levels.length} questions done!`;
+
+  const sb = document.getElementById('scoreboard');
+  sb.classList.add('show');
+  document.getElementById('sbBigScore').textContent  = score;
+  document.getElementById('sbCorrect').textContent   = correct;
+  document.getElementById('sbWrong').textContent     = wrong;
+  document.getElementById('sbLevels').textContent    = levels.length;
+
+  const pct = (correct / levels.length) * 100;
+  if (pct === 100)      { document.getElementById('sbEmoji').textContent = '🏆'; document.getElementById('sbTitle').textContent = 'Perfect Reasoner!'; }
+  else if (pct >= 60)   { document.getElementById('sbEmoji').textContent = '🧠'; document.getElementById('sbTitle').textContent = 'Sharp Thinker!'; }
+  else                  { document.getElementById('sbEmoji').textContent = '💡'; document.getElementById('sbTitle').textContent = 'Keep Practising!'; }
+  document.getElementById('sbSubtitle').textContent = `You got ${correct} out of ${levels.length} correct`;
+
+  // Save score
+  fetch('/save_score', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ game_name: 'Reason Path', score: score, rounds_played: levels.length, total_rounds: levels.length, time_taken_ms: Math.round(performance.now() - _gameStartTime) })
+  }).catch(() => {});
+}
+
+function restartGame() {
+  currentLevel = 0; score = 0; correct = 0; wrong = 0;
+  document.getElementById('liveScore').textContent = '0';
+  document.querySelectorAll('.chain-title').forEach(e => e.style.display = '');
+  document.querySelectorAll('.actions').forEach(e => e.style.display = '');
+  document.getElementById('scoreboard').classList.remove('show');
+  loadLevel();
+}
+
+// ─── UTIL ─────────────────────────────────────────────────────────────────────
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ─── START ────────────────────────────────────────────────────────────────────
+loadLevel();
+</script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+
+<script>
+// Save score on page unload (handles tab close / navigation away)
+window.addEventListener('beforeunload', function() {
+  const _score = (function(){ try{ return score; }catch(e){ return 0; } })();
+  if (_score > 0) {
+    navigator.sendBeacon('/save_score', JSON.stringify({
+      game_name: 'Reason Path',
+      score: _score,
+      time_taken_ms: _gameStartTime ? Math.round(performance.now() - _gameStartTime) : null
+    }));
+  }
+});
+</script>
+</body>
+</html>

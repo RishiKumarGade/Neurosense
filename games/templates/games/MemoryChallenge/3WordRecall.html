@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3-Word Memory Game - NeuroSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            color: #64748b;
+        }
+
+        .main-content {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .game-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(219, 39, 119, 0.1), 0 8px 16px rgba(147, 51, 234, 0.05);
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #db2777, #be185d, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            color: #64748b;
+            opacity: 0.8;
+        }
+
+        .word-display {
+            background: linear-gradient(135deg, rgba(219, 39, 119, 0.1), rgba(168, 85, 247, 0.1));
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(219, 39, 119, 0.2);
+        }
+
+        .words {
+            font-size: 2em;
+            font-weight: 600;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #db2777, #be185d, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .input-section {
+            margin: 20px 0;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        input[type="text"] {
+            padding: 15px;
+            font-size: 1.1em;
+            border: 2px solid rgba(219, 39, 119, 0.2);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #64748b;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #db2777;
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(219, 39, 119, 0.15);
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #a855f7, #8b5cf6);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(219, 39, 119, 0.25);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .timer {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin: 20px 0;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .score {
+            font-size: 1.3em;
+            margin: 20px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(219, 39, 119, 0.1), rgba(168, 85, 247, 0.1));
+            border-radius: 15px;
+            color: #64748b;
+            font-weight: 600;
+            border: 1px solid rgba(219, 39, 119, 0.2);
+        }
+
+        .feedback {
+            font-size: 1.2em;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .correct {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(21, 128, 61, 0.1));
+            color: #059669;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .incorrect {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(185, 28, 28, 0.1));
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .fade-out {
+            animation: fadeOut 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .game-wrapper {
+                padding: 1rem;
+            }
+
+            .game-container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .words {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+
+<body>
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">NeuroSense</div>
+            <button class="back-btn" onclick="window.location.href='/memory-challenge'">
+                ← Back to Memory Games
+            </button>
+        </header>
+
+        <!-- Game Wrapper -->
+        <div class="game-wrapper">
+            <div class="game-container">
+                <h1>Memory Challenge</h1>
+                <p class="subtitle">Remember the 3 words and type them back!</p>
+
+                <div class="score">
+                    <div>Score: <span id="score">0</span></div>
+                    <div>Round: <span id="round">1</span></div>
+                </div>
+
+                <div class="word-display" id="wordDisplay">
+                    <div class="words" id="words">Click Start to begin!</div>
+                </div>
+
+                <div class="timer" id="timer"></div>
+
+                <div class="input-section hidden" id="inputSection">
+                    <div class="input-container">
+                        <input type="text" id="word1" placeholder="First word" maxlength="20">
+                        <input type="text" id="word2" placeholder="Second word" maxlength="20">
+                        <input type="text" id="word3" placeholder="Third word" maxlength="20">
+                    </div>
+                    <button class="btn btn-secondary" onclick="submitAnswers()">Submit</button>
+                </div>
+
+                <div class="feedback hidden" id="feedback"></div>
+
+                <div>
+                    <button class="btn btn-primary" id="startBtn" onclick="startGame()">Start Game</button>
+                    <button class="btn btn-secondary" id="nextBtn" onclick="nextRound()" style="display: none;">Next Round</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Word bank for the game
+        const wordBank = [
+            'apple', 'tiger', 'ocean', 'mountain', 'guitar', 'rainbow', 'thunder', 'crystal',
+            'butterfly', 'rocket', 'diamond', 'sunset', 'whisper', 'galaxy', 'dragon', 'flower',
+            'castle', 'lightning', 'phoenix', 'treasure', 'forest', 'wizard', 'anchor', 'melody',
+            'puzzle', 'shadow', 'comet', 'dream', 'warrior', 'magic', 'journey', 'wisdom',
+            'adventure', 'mystery', 'freedom', 'harmony', 'courage', 'wonder', 'spirit', 'legend'
+        ];
+
+        let currentWords = [];
+        let score = 0;
+        let round = 1;
+        let gamePhase = 'waiting'; // waiting, showing, recalling
+        let timer = null;
+
+        function getRandomWords() {
+            const shuffled = [...wordBank].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, 3);
+        }
+
+        let _gameStartTime = null;
+function startGame() {
+            _gameStartTime = _gameStartTime || performance.now();
+            gamePhase = 'showing';
+            currentWords = getRandomWords();
+
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('inputSection').classList.add('hidden');
+            document.getElementById('feedback').classList.add('hidden');
+
+            showWords();
+        }
+
+        function showWords() {
+            const wordsElement = document.getElementById('words');
+            const timerElement = document.getElementById('timer');
+
+            wordsElement.textContent = currentWords.join('  •  ');
+            wordsElement.parentElement.classList.add('fade-in');
+
+            let timeLeft = 5;
+            timerElement.textContent = `Remember these words: ${timeLeft}s`;
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = `Remember these words: ${timeLeft}s`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    hideWords();
+                }
+            }, 1000);
+        }
+
+        function hideWords() {
+            const wordsElement = document.getElementById('words');
+            const timerElement = document.getElementById('timer');
+
+            wordsElement.parentElement.classList.remove('fade-in');
+            wordsElement.parentElement.classList.add('fade-out');
+
+            setTimeout(() => {
+                wordsElement.textContent = 'Time Up!!';
+                wordsElement.parentElement.classList.remove('fade-out');
+                wordsElement.parentElement.classList.add('fade-in');
+
+                gamePhase = 'recalling';
+                showInputSection();
+            }, 500);
+
+            let timeLeft = 15;
+            timerElement.textContent = `Time to recall: ${timeLeft}s`;
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = `Time to recall: ${timeLeft}s`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    submitAnswers();
+                }
+            }, 1000);
+        }
+
+        function showInputSection() {
+            document.getElementById('inputSection').classList.remove('hidden');
+            document.getElementById('word1').focus();
+
+            // Clear previous inputs
+            document.getElementById('word1').value = '';
+            document.getElementById('word2').value = '';
+            document.getElementById('word3').value = '';
+        }
+
+        function submitAnswers() {
+            if (gamePhase !== 'recalling') return;
+
+            clearInterval(timer);
+
+            const input1 = document.getElementById('word1').value.toLowerCase().trim();
+            const input2 = document.getElementById('word2').value.toLowerCase().trim();
+            const input3 = document.getElementById('word3').value.toLowerCase().trim();
+
+            const userAnswers = [input1, input2, input3];
+            const correctAnswers = currentWords.map(word => word.toLowerCase());
+
+            let correctCount = 0;
+            let feedbackText = '';
+
+            // Check if words match (order doesn't matter)
+            for (let i = 0; i < 3; i++) {
+                if (correctAnswers.includes(userAnswers[i]) && userAnswers[i] !== '') {
+                    correctCount++;
+                }
+            }
+
+            if (correctCount === 3) {
+                score += 10;
+                feedbackText = '🎉 Perfect! All words correct!';
+                document.getElementById('feedback').className = 'feedback correct';
+            } else if (correctCount === 2) {
+                score += 5;
+                feedbackText = '👍 Good! 2 out of 3 words correct!';
+                document.getElementById('feedback').className = 'feedback correct';
+            } else if (correctCount === 1) {
+                score += 2;
+                feedbackText = '👌 Not bad! 1 out of 3 words correct!';
+                document.getElementById('feedback').className = 'feedback correct';
+            } else {
+                feedbackText = '❌ No correct words. Try again!';
+                document.getElementById('feedback').className = 'feedback incorrect';
+            }
+
+            feedbackText += `\n\nCorrect words were: ${currentWords.join(', ')}`;
+
+            document.getElementById('feedback').textContent = feedbackText;
+            document.getElementById('feedback').classList.remove('hidden');
+            document.getElementById('score').textContent = score;
+            document.getElementById('timer').textContent = '';
+
+            document.getElementById('inputSection').classList.add('hidden');
+            document.getElementById('nextBtn').style.display = 'inline-block';
+
+            gamePhase = 'waiting';
+        }
+
+        const MAX_ROUNDS = 10;
+
+        function nextRound() {
+            round++;
+            document.getElementById('round').textContent = `${round}/${MAX_ROUNDS}`;
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('feedback').classList.add('hidden');
+
+            if (round > MAX_ROUNDS) {
+                // All rounds done — save final accumulated score once
+                fetch('/save_score', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ game_name: '3 Word Recall', score: score, rounds_played: MAX_ROUNDS, total_rounds: MAX_ROUNDS, time_taken_ms: Math.round(performance.now() - _gameStartTime) })
+                }).catch(() => {});
+                document.getElementById('feedback').textContent = `🏆 All ${MAX_ROUNDS} rounds complete! Final Score: ${score}`;
+                document.getElementById('feedback').classList.remove('hidden');
+                document.getElementById('nextBtn').style.display = 'none';
+                return;
+            }
+
+            startGame();
+        }
+
+        // Add Enter key support for inputs
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && gamePhase === 'recalling') {
+                submitAnswers();
+            }
+        });
+
+        // Auto-focus next input
+        document.getElementById('word1').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                document.getElementById('word2').focus();
+            }
+        });
+
+        document.getElementById('word2').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                document.getElementById('word3').focus();
+            }
+        });
+
+        document.getElementById('word3').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                submitAnswers();
+            }
+        });
+    </script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body>
+
+</html>

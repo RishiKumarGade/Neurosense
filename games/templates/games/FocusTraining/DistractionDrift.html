@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distraction Drift - NeuroSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            color: #64748b;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            position: relative;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            z-index: 10;
+        }
+
+        .game-header h1 {
+            font-size: 2.5rem;
+            color: #be185d;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .game-header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        .game-board {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: linear-gradient(135deg, #fce7f3, #eef2ff);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #be185d;
+            margin-top: 0.25rem;
+        }
+
+        /* Instructions */
+        .instructions {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #6366f1;
+        }
+
+        .instructions h3 {
+            color: #3730a3;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .instructions p {
+            color: #4338ca;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Focus Task */
+        .focus-task {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 2rem;
+            border-radius: 16px;
+            margin: 2rem 0;
+            text-align: center;
+            border: 3px solid #eab308;
+        }
+
+        .task-title {
+            color: #78350f;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .task-display {
+            font-size: 4rem;
+            font-weight: 800;
+            color: #be185d;
+            margin: 1rem 0;
+            min-height: 5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .answer-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .answer-btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 1.25rem 2.5rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .answer-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(219, 39, 119, 0.4);
+        }
+
+        .answer-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Distractions */
+        .distraction-layer {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 5;
+            overflow: hidden;
+        }
+
+        .visual-distraction {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0;
+            animation: float-distraction 5s ease-in-out infinite;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        @keyframes float-distraction {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .flash-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(219, 39, 119, 0.1);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .flash-overlay.active {
+            animation: flash 0.5s ease;
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+        }
+
+        .control-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .control-btn.secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* Status Message */
+        .status-message {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 1.5rem 0;
+            min-height: 2rem;
+            color: #be185d;
+        }
+
+        .distraction-level {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            font-weight: 600;
+            color: #dc2626;
+            border: 2px solid #fca5a5;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-header h1 {
+                font-size: 2rem;
+            }
+
+            .game-board {
+                padding: 2rem 1rem;
+            }
+
+            .task-display {
+                font-size: 3rem;
+            }
+
+            .answer-btn {
+                padding: 1rem 2rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">NeuroSense</div>
+            <button class="back-btn" onclick="window.location.href='/focus-training'">
+                ← Back to Focus Training
+            </button>
+        </header>
+
+        <!-- Game Container -->
+        <div class="game-container">
+            <div class="game-header">
+                <h1>🌊 Distraction Drift</h1>
+                <p>Maintain focus as distractions intensify!</p>
+            </div>
+
+            <div class="game-board">
+                <!-- Instructions -->
+                <div class="instructions" id="instructions">
+                    <h3>🎯 How to Play:</h3>
+                    <p>Answer simple math problems while distractions increase</p>
+                    <p>Click the correct answer as quickly as possible</p>
+                    <p>Visual and auditory distractions will gradually intensify</p>
+                    <p>Stay focused and maintain your accuracy!</p>
+                </div>
+
+                <!-- Stats Bar -->
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-label">Score</div>
+                        <div class="stat-value" id="score">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Streak</div>
+                        <div class="stat-value" id="streak">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Correct</div>
+                        <div class="stat-value" id="correct">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Accuracy</div>
+                        <div class="stat-value" id="accuracy">100%</div>
+                    </div>
+                </div>
+
+                <!-- Distraction Level Indicator -->
+                <div class="distraction-level" id="distraction-level" style="display: none;">
+                    Distraction Level: <span id="level-text">1</span> 🌊
+                </div>
+
+                <!-- Status Message -->
+                <div class="status-message" id="status">Click "Start Game" to begin!</div>
+
+                <!-- Focus Task -->
+                <div class="focus-task" id="focus-task" style="display: none;">
+                    <div class="task-title">Solve the Problem:</div>
+                    <div class="task-display" id="task-display"></div>
+                    <div class="answer-buttons" id="answer-buttons"></div>
+                </div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <button class="control-btn" id="start-btn" onclick="startGame()">
+                        ▶️ Start Game
+                    </button>
+                    <button class="control-btn secondary" onclick="resetGame()">
+                        🔄 Reset Game
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Distraction Layer -->
+    <div class="distraction-layer" id="distraction-layer"></div>
+    <div class="flash-overlay" id="flash-overlay"></div>
+
+    <script>
+        // Audio Context for sound effects
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContext();
+
+        // Game constants
+        const MAX_QUESTIONS = 20;
+        let sessionTimer = null;
+
+        // Distraction emojis
+        const distractionEmojis = ['💫', '⭐', '✨', '🌟', '💥', '🎨', '🎭', '🎪', '🎯', '🎲', '🎮', '🎸', '🎺', '🎻', '🔥', '⚡', '🌈', '☀️', '🌙', '🦋', '🌸', '🌺', '🌻', '🌷'];
+
+        // Game state
+        let gameState = {
+            score: 0,
+            streak: 0,
+            correct: 0,
+            total: 0,
+            distractionLevel: 0,
+            isPlaying: false,
+            currentAnswer: 0,
+            visualDistractions: [],
+            audioInterval: null,
+            flashInterval: null
+        };
+
+        function startGame() {
+ sessionTimer = createGameTimer(); sessionTimer.start();
+            gameState = {
+                score: 0,
+                streak: 0,
+                correct: 0,
+                total: 0,
+                distractionLevel: 0,
+                isPlaying: true,
+                currentAnswer: 0,
+                visualDistractions: [],
+                audioInterval: null,
+                flashInterval: null
+            };
+
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('focus-task').style.display = 'block';
+            document.getElementById('distraction-level').style.display = 'block';
+            document.getElementById('start-btn').disabled = true;
+
+            updateDisplay();
+            nextQuestion();
+
+            // Initialize audio context
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }
+
+        function nextQuestion() {
+            if (!gameState.isPlaying) return;
+
+            // Generate math problem
+            const num1 = Math.floor(Math.random() * 20) + 1;
+            const num2 = Math.floor(Math.random() * 20) + 1;
+            const operations = ['+', '-', '×'];
+            const operation = operations[Math.floor(Math.random() * operations.length)];
+
+            let answer;
+            let question;
+
+            switch(operation) {
+                case '+':
+                    answer = num1 + num2;
+                    question = `${num1} + ${num2}`;
+                    break;
+                case '-':
+                    answer = num1 > num2 ? num1 - num2 : num2 - num1;
+                    question = num1 > num2 ? `${num1} - ${num2}` : `${num2} - ${num1}`;
+                    break;
+                case '×':
+                    answer = num1 * num2;
+                    question = `${num1} × ${num2}`;
+                    break;
+            }
+
+            gameState.currentAnswer = answer;
+
+            // Display question
+            document.getElementById('task-display').textContent = question + ' = ?';
+
+            // Generate answer options
+            const options = generateOptions(answer);
+            displayOptions(options);
+
+            // Update distraction level every 3 correct answers
+            if (gameState.correct > 0 && gameState.correct % 3 === 0) {
+                increaseDistractions();
+            }
+
+            updateStatus('Focus on the math problem!');
+        }
+
+        function generateOptions(correct) {
+            const options = [correct];
+            let attempts = 0;
+            while (options.length < 4 && attempts < 100) {
+                attempts++;
+                const offset = Math.floor(Math.random() * 20) - 10;
+                if (offset === 0) continue;
+                const wrong = correct + offset;
+                if (wrong > 0 && !options.includes(wrong)) {
+                    options.push(wrong);
+                }
+            }
+            // Fallback: fill with sequential numbers if loop couldn't find enough
+            let fill = 1;
+            while (options.length < 4) {
+                if (!options.includes(fill)) options.push(fill);
+                fill++;
+            }
+            return options.sort(() => Math.random() - 0.5);
+        }
+
+        function displayOptions(options) {
+            const container = document.getElementById('answer-buttons');
+            container.innerHTML = '';
+
+            options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.textContent = option;
+                btn.onclick = () => checkAnswer(option);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected) {
+            gameState.total++;
+
+            if (selected === gameState.currentAnswer) {
+                gameState.correct++;
+                gameState.streak++;
+                gameState.score += 10 + (gameState.streak * 2);
+                updateStatus('✅ Correct! Great focus!');
+            } else {
+                gameState.streak = 0;
+                updateStatus('❌ Wrong answer. Stay focused!');
+            }
+
+            updateDisplay();
+            if(gameState.total>=MAX_QUESTIONS){ finishSession(); } else { setTimeout(nextQuestion, 500); }
+        }
+
+        function increaseDistractions() {
+            gameState.distractionLevel++;
+            document.getElementById('level-text').textContent = gameState.distractionLevel;
+
+            // Add more visual distractions
+            if (gameState.distractionLevel <= 10) {
+                addVisualDistractions(gameState.distractionLevel * 2);
+            }
+
+            // Add audio distractions
+            if (gameState.distractionLevel >= 2) {
+                startAudioDistractions();
+            }
+
+            // Add flash effects
+            if (gameState.distractionLevel >= 4) {
+                startFlashEffects();
+            }
+        }
+
+        function addVisualDistractions(count) {
+            const layer = document.getElementById('distraction-layer');
+
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const distraction = document.createElement('div');
+                    distraction.className = 'visual-distraction';
+                    distraction.textContent = distractionEmojis[Math.floor(Math.random() * distractionEmojis.length)];
+
+                    const startX = Math.random() * window.innerWidth;
+                    const startY = Math.random() * window.innerHeight;
+                    const endX = (Math.random() - 0.5) * 400;
+                    const endY = (Math.random() - 0.5) * 400;
+
+                    distraction.style.left = startX + 'px';
+                    distraction.style.top = startY + 'px';
+                    distraction.style.setProperty('--tx', endX + 'px');
+                    distraction.style.setProperty('--ty', endY + 'px');
+                    distraction.style.animationDuration = (3 + Math.random() * 3) + 's';
+
+                    layer.appendChild(distraction);
+
+                    setTimeout(() => distraction.remove(), 6000);
+                }, i * 200);
+            }
+        }
+
+        function startAudioDistractions() {
+            if (gameState.audioInterval) return;
+
+            const interval = Math.max(3000 - (gameState.distractionLevel * 200), 1000);
+            
+            gameState.audioInterval = setInterval(() => {
+                if (gameState.isPlaying) {
+                    playDistractingSound();
+                }
+            }, interval);
+        }
+
+        function playDistractingSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            const frequencies = [200, 300, 400, 500, 600, 800];
+            oscillator.frequency.value = frequencies[Math.floor(Math.random() * frequencies.length)];
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        function startFlashEffects() {
+            if (gameState.flashInterval) return;
+
+            const interval = Math.max(4000 - (gameState.distractionLevel * 300), 1500);
+
+            gameState.flashInterval = setInterval(() => {
+                if (gameState.isPlaying) {
+                    const flash = document.getElementById('flash-overlay');
+                    flash.classList.add('active');
+                    setTimeout(() => flash.classList.remove('active'), 500);
+                }
+            }, interval);
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('streak').textContent = gameState.streak;
+            document.getElementById('correct').textContent = `${gameState.correct}/${MAX_QUESTIONS}`;
+
+            const accuracy = gameState.total > 0 
+                ? Math.round((gameState.correct / gameState.total) * 100)
+                : 100;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            
+            // Clear intervals
+            if (gameState.audioInterval) {
+                clearInterval(gameState.audioInterval);
+            }
+            if (gameState.flashInterval) {
+                clearInterval(gameState.flashInterval);
+            }
+
+            // Clear visual distractions
+            document.getElementById('distraction-layer').innerHTML = '';
+
+            // Reset UI
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('focus-task').style.display = 'none';
+            document.getElementById('distraction-level').style.display = 'none';
+            document.getElementById('start-btn').disabled = false;
+
+            gameState = {
+                score: 0,
+                streak: 0,
+                correct: 0,
+                total: 0,
+                distractionLevel: 0,
+                isPlaying: false,
+                currentAnswer: 0,
+                visualDistractions: [],
+                audioInterval: null,
+                flashInterval: null
+            };
+
+            updateDisplay();
+            updateStatus('Click "Start Game" to begin!');
+        }
+
+ async function finishSession(){
+   gameState.isPlaying = false;
+   if (gameState.audioInterval) clearInterval(gameState.audioInterval);
+   if (gameState.flashInterval) clearInterval(gameState.flashInterval);
+   const elapsed = sessionTimer.stop();
+   const accuracy = gameState.total>0 ? Math.round((gameState.correct/gameState.total)*100) : 100;
+   await postScore({
+     gameName: 'FocusTraining-DistractionDrift',
+     score: gameState.score,
+     timeTakenMs: elapsed,
+     mode: 'limit-rounds',
+     roundsPlayed: MAX_QUESTIONS,
+     extra: {accuracy: accuracy, distractionLevel: gameState.distractionLevel}
+   });
+   window.location.href = '/progress';
+ }
+
+ // Initialize display
+ updateDisplay();
+ </script>
+<script>
+// === NeuroSense common helpers ===
+function createGameTimer(){let s=null;return{start(){s=performance.now()},stop(){if(s===null) return 0;const e=performance.now()-s;s=null;return Math.round(e)}}}
+async function postScore({gameName,score,timeTakenMs,mode=null,roundsPlayed=null,extra=null}){try{const res=await fetch('/save_score',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({game_name:gameName,score:score,time_taken_ms:timeTakenMs,mode:mode,rounds_played: roundsPlayed, total_rounds: roundsPlayed,extra:extra})});const data=await res.json();if(!res.ok){console.error('Save failed:',data);alert('Could not save your result.');}return data}catch(err){console.error('Save error:',err);alert('Could not save your result.');return null}}
+
+</script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body></html>

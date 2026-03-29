@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Sort - NeuroSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            color: #64748b;
+        }
+
+        .main-content {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .game-header h1 {
+            font-size: 2.5rem;
+            color: #be185d;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .game-header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        .game-board {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 2rem;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: linear-gradient(135deg, #fce7f3, #eef2ff);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #be185d;
+            margin-top: 0.25rem;
+        }
+
+        /* Instructions */
+        .instructions {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #6366f1;
+        }
+
+        .instructions h3 {
+            color: #3730a3;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .instructions p {
+            color: #4338ca;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .instructions .warning {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid #fca5a5;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        /* Current Rule Display */
+        .rule-display {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 2rem;
+            border-radius: 16px;
+            margin: 2rem 0;
+            text-align: center;
+            border: 3px solid #eab308;
+        }
+
+        .rule-label {
+            font-size: 1rem;
+            color: #78350f;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .rule-text {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #be185d;
+            animation: pulse-rule 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-rule {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .rule-change-alert {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border: 3px solid #ef4444;
+            animation: flash-alert 0.5s ease 3;
+        }
+
+        @keyframes flash-alert {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Item Display */
+        .item-display {
+            background: white;
+            border: 3px solid #be185d;
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 2rem 0;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .current-item {
+            font-size: 4rem;
+            font-weight: 700;
+            animation: item-appear 0.3s ease;
+        }
+
+        @keyframes item-appear {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Category Buttons */
+        .category-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .category-btn {
+            background: white;
+            border: 3px solid #e2e8f0;
+            padding: 2.5rem;
+            border-radius: 20px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-btn:hover {
+            transform: translateY(-4px);
+            border-color: #be185d;
+            box-shadow: 0 8px 20px rgba(219, 39, 119, 0.2);
+        }
+
+        .category-btn.left {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border-color: #3b82f6;
+            color: #1e40af;
+        }
+
+        .category-btn.right {
+            background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+            border-color: #db2777;
+            color: #be185d;
+        }
+
+        .category-btn.correct {
+            animation: correct-flash 0.5s ease;
+        }
+
+        .category-btn.incorrect {
+            animation: incorrect-shake 0.5s ease;
+        }
+
+        @keyframes correct-flash {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); background: #dcfce7; }
+        }
+
+        @keyframes incorrect-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Timer Bar */
+        .timer-bar-container {
+            width: 100%;
+            height: 12px;
+            background: rgba(239, 68, 68, 0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .timer-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+            transition: width 0.1s linear;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+        }
+
+        .control-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .control-btn.secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* Status Message */
+        .status-message {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 1.5rem 0;
+            min-height: 2rem;
+            color: #be185d;
+        }
+
+        .status-message.success {
+            color: #22c55e;
+        }
+
+        .status-message.error {
+            color: #ef4444;
+        }
+
+        /* Results Summary */
+        .results-summary {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-top: 2rem;
+            border-left: 4px solid #6366f1;
+            display: none;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3730a3;
+            margin-bottom: 1rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .result-box {
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .result-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-header h1 {
+                font-size: 2rem;
+            }
+
+            .game-board {
+                padding: 2rem 1rem;
+            }
+
+            .current-item {
+                font-size: 3rem;
+            }
+
+            .category-btn {
+                padding: 2rem;
+                font-size: 1.2rem;
+            }
+
+            .rule-text {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">NeuroSense</div>
+            <button class="back-btn" onclick="window.location.href='/speed-processing'">
+                ← Back to Speed Games
+            </button>
+        </header>
+
+        <!-- Game Container -->
+        <div class="game-container">
+            <div class="game-header">
+                <h1>⚡ Speed Sort</h1>
+                <p>Categorize items quickly as rules change!</p>
+            </div>
+
+            <div class="game-board">
+                <!-- Instructions -->
+                <div class="instructions" id="instructions">
+                    <h3>🎯 How to Play:</h3>
+                    <p>Items will appear one at a time</p>
+                    <p>Sort each item into LEFT or RIGHT category based on the current rule</p>
+                    <p>Rules change every 5-10 items - stay alert!</p>
+                    <p>Sort 30 items as fast and accurately as possible</p>
+                    <p class="warning">⚠️ Watch for rule changes - they flash RED!</p>
+                </div>
+
+                <!-- Stats Bar -->
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-label">Items</div>
+                        <div class="stat-value" id="item-count">0/30</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Score</div>
+                        <div class="stat-value" id="score">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Streak</div>
+                        <div class="stat-value" id="streak">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Accuracy</div>
+                        <div class="stat-value" id="accuracy">100%</div>
+                    </div>
+                </div>
+
+                <!-- Status Message -->
+                <div class="status-message" id="status">Click "Start Game" to begin!</div>
+
+                <!-- Timer Bar -->
+                <div class="timer-bar-container" id="timer-container" style="display: none;">
+                    <div class="timer-bar" id="timer-bar"></div>
+                </div>
+
+                <!-- Current Rule Display -->
+                <div class="rule-display" id="rule-display" style="display: none;">
+                    <div class="rule-label">CURRENT SORTING RULE:</div>
+                    <div class="rule-text" id="rule-text"></div>
+                </div>
+
+                <!-- Item Display -->
+                <div class="item-display" id="item-display" style="display: none;">
+                    <div class="current-item" id="current-item"></div>
+                </div>
+
+                <!-- Category Buttons -->
+                <div class="category-buttons" id="category-buttons" style="display: none;">
+                    <button class="category-btn left" id="left-btn" onclick="sortItem('left')">
+                        <div id="left-label">LEFT</div>
+                    </button>
+                    <button class="category-btn right" id="right-btn" onclick="sortItem('right')">
+                        <div id="right-label">RIGHT</div>
+                    </button>
+                </div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <button class="control-btn" id="start-btn" onclick="startGame()">
+                        ▶️ Start Game
+                    </button>
+                    <button class="control-btn secondary" onclick="resetGame()">
+                        🔄 Reset
+                    </button>
+                </div>
+
+                <!-- Results Summary -->
+                <div class="results-summary" id="results-summary">
+                    <div class="results-title">📊 Game Complete!</div>
+                    <div class="results-grid">
+                        <div class="result-box">
+                            <div class="result-label">Final Score</div>
+                            <div class="result-value" id="final-score">0</div>
+                        </div>
+                        <div class="result-box">
+                            <div class="result-label">Accuracy</div>
+                            <div class="result-value" id="final-accuracy">0%</div>
+                        </div>
+                        <div class="result-box">
+                            <div class="result-label">Best Streak</div>
+                            <div class="result-value" id="best-streak">0</div>
+                        </div>
+                        <div class="result-box">
+                            <div class="result-label">Avg Time</div>
+                            <div class="result-value" id="avg-time">0s</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sorting rules
+        const sortingRules = [
+            {
+                name: "Numbers: Even vs Odd",
+                items: ['2', '5', '8', '13', '20', '7', '14', '9', '16', '11'],
+                leftLabel: "EVEN",
+                rightLabel: "ODD",
+                isLeft: (item) => parseInt(item) % 2 === 0
+            },
+            {
+                name: "Size: Small vs Large",
+                items: ['3', '99', '5', '88', '15', '72', '8', '95', '12', '81'],
+                leftLabel: "< 50",
+                rightLabel: "> 50",
+                isLeft: (item) => parseInt(item) < 50
+            },
+            {
+                name: "Food: Fruit vs Vegetable",
+                items: ['🍎', '🥕', '🍌', '🥬', '🍊', '🥒', '🍇', '🌽', '🍓', '🥔'],
+                leftLabel: "FRUIT",
+                rightLabel: "VEGGIE",
+                isLeft: (item) => ['🍎', '🍌', '🍊', '🍇', '🍓'].includes(item)
+            },
+            {
+                name: "Animals: Land vs Water",
+                items: ['🐕', '🐟', '🐈', '🐋', '🐘', '🦈', '🦁', '🐙', '🐯', '🐬'],
+                leftLabel: "LAND",
+                rightLabel: "WATER",
+                isLeft: (item) => ['🐕', '🐈', '🐘', '🦁', '🐯'].includes(item)
+            },
+            {
+                name: "Shapes: Round vs Angular",
+                items: ['⭕', '⬛', '🔵', '🔺', '⚪', '⬜', '🟣', '🔶', '🟡', '🔷'],
+                leftLabel: "ROUND",
+                rightLabel: "ANGULAR",
+                isLeft: (item) => ['⭕', '🔵', '⚪', '🟣', '🟡'].includes(item)
+            },
+            {
+                name: "Colors: Warm vs Cool",
+                items: ['🔴', '🔵', '🟠', '🟢', '🟡', '🟣', '🟤', '⚫', '⚪', '🔵'],
+                leftLabel: "WARM",
+                rightLabel: "COOL",
+                isLeft: (item) => ['🔴', '🟠', '🟡', '🟤'].includes(item)
+            }
+        ];
+
+        let gameState = {
+            currentRuleIndex: 0,
+            currentItemIndex: 0,
+            itemsProcessed: 0,
+            maxItems: 30,
+            score: 0,
+            correct: 0,
+            streak: 0,
+            bestStreak: 0,
+            isPlaying: false,
+            itemStartTime: 0,
+            responseTimes: [],
+            itemsUntilRuleChange: 0
+        };
+
+        function startGame() {
+            gameState = {
+                currentRuleIndex: 0,
+                currentItemIndex: 0,
+                itemsProcessed: 0,
+                maxItems: 30,
+                score: 0,
+                correct: 0,
+                streak: 0,
+                bestStreak: 0,
+                isPlaying: true,
+                itemStartTime: 0,
+                responseTimes: [],
+                itemsUntilRuleChange: Math.floor(Math.random() * 6) + 5
+            };
+
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('rule-display').style.display = 'block';
+            document.getElementById('item-display').style.display = 'flex';
+            document.getElementById('category-buttons').style.display = 'grid';
+            document.getElementById('timer-container').style.display = 'block';
+            document.getElementById('results-summary').style.display = 'none';
+            document.getElementById('start-btn').disabled = true;
+
+            updateDisplay();
+            loadNewRule();
+            nextItem();
+        }
+
+        function loadNewRule() {
+            const ruleDisplay = document.getElementById('rule-display');
+            ruleDisplay.classList.add('rule-change-alert');
+            
+            gameState.currentRuleIndex = Math.floor(Math.random() * sortingRules.length);
+            gameState.currentItemIndex = 0;
+            
+            const rule = sortingRules[gameState.currentRuleIndex];
+            document.getElementById('rule-text').textContent = rule.name;
+            document.getElementById('left-label').textContent = rule.leftLabel;
+            document.getElementById('right-label').textContent = rule.rightLabel;
+
+            updateStatus('🔄 NEW RULE! Pay attention!', 'error');
+
+            setTimeout(() => {
+                ruleDisplay.classList.remove('rule-change-alert');
+            }, 1500);
+        }
+
+        function nextItem() {
+            if (gameState.itemsProcessed >= gameState.maxItems) {
+                endGame();
+                return;
+            }
+
+            // Check if it's time to change the rule
+            if (gameState.itemsProcessed > 0 && gameState.itemsProcessed === gameState.itemsUntilRuleChange) {
+                loadNewRule();
+                gameState.itemsUntilRuleChange += Math.floor(Math.random() * 6) + 5;
+            }
+
+            const rule = sortingRules[gameState.currentRuleIndex];
+            
+            // Get random item from current rule
+            const randomIndex = Math.floor(Math.random() * rule.items.length);
+            const item = rule.items[randomIndex];
+            
+            document.getElementById('current-item').textContent = item;
+            gameState.itemStartTime = Date.now();
+            
+            // Start timer for this item
+            startItemTimer();
+            
+            updateStatus('Sort this item quickly!', '');
+        }
+
+        function startItemTimer() {
+            const timerBar = document.getElementById('timer-bar');
+            timerBar.style.width = '100%';
+            
+            let timeElapsed = 0;
+            const maxTime = 5;
+            
+            const interval = setInterval(() => {
+                timeElapsed += 0.05;
+                const percentage = Math.max(0, 100 - (timeElapsed / maxTime * 100));
+                timerBar.style.width = percentage + '%';
+
+                if (!gameState.isPlaying || timeElapsed >= maxTime) {
+                    clearInterval(interval);
+                    if (timeElapsed >= maxTime && gameState.isPlaying) {
+                        handleTimeout();
+                    }
+                }
+            }, 50);
+        }
+
+        function sortItem(category) {
+            if (!gameState.isPlaying) return;
+
+            const responseTime = (Date.now() - gameState.itemStartTime) / 1000;
+            gameState.responseTimes.push(responseTime);
+            gameState.itemsProcessed++;
+
+            const rule = sortingRules[gameState.currentRuleIndex];
+            const item = document.getElementById('current-item').textContent;
+            const shouldBeLeft = rule.isLeft(item);
+            const isCorrect = (category === 'left' && shouldBeLeft) || (category === 'right' && !shouldBeLeft);
+
+            const btn = category === 'left' ? document.getElementById('left-btn') : document.getElementById('right-btn');
+
+            if (isCorrect) {
+                btn.classList.add('correct');
+                gameState.correct++;
+                gameState.streak++;
+                gameState.bestStreak = Math.max(gameState.bestStreak, gameState.streak);
+                
+                // Speed bonus
+                const speedBonus = Math.max(0, Math.floor((5 - responseTime) * 10));
+                const points = 50 + speedBonus + (gameState.streak * 5);
+                gameState.score += points;
+
+                updateStatus(`✅ Correct! +${points} points`, 'success');
+            } else {
+                btn.classList.add('incorrect');
+                gameState.streak = 0;
+                gameState.score = Math.max(0, gameState.score - 25);
+
+                updateStatus('❌ Wrong category! -25 points', 'error');
+            }
+
+            setTimeout(() => {
+                btn.classList.remove('correct', 'incorrect');
+            }, 500);
+
+            updateDisplay();
+
+            setTimeout(() => {
+                nextItem();
+            }, 800);
+        }
+
+        function handleTimeout() {
+            gameState.itemsProcessed++;
+            gameState.streak = 0;
+            gameState.score = Math.max(0, gameState.score - 50);
+
+            updateStatus('⏱️ Too slow! -50 points', 'error');
+            updateDisplay();
+
+            setTimeout(() => {
+                nextItem();
+            }, 1000);
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+
+            const accuracy = gameState.itemsProcessed > 0 
+                ? Math.round((gameState.correct / gameState.itemsProcessed) * 100)
+                : 0;
+
+            const avgTime = gameState.responseTimes.length > 0
+                ? (gameState.responseTimes.reduce((a, b) => a + b, 0) / gameState.responseTimes.length).toFixed(2)
+                : 0;
+
+            document.getElementById('final-score').textContent = gameState.score;
+            document.getElementById('final-accuracy').textContent = accuracy + '%';
+            document.getElementById('best-streak').textContent = gameState.bestStreak;
+            document.getElementById('avg-time').textContent = avgTime + 's';
+
+            document.getElementById('item-display').style.display = 'none';
+            document.getElementById('category-buttons').style.display = 'none';
+            document.getElementById('timer-container').style.display = 'none';
+            document.getElementById('results-summary').style.display = 'block';
+            document.getElementById('start-btn').disabled = false;
+
+            updateStatus('🎉 Game Complete! Check your results below.', 'success');
+
+            fetch('/save_score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    game_name: 'Speed Sort',
+                    score: gameState.score,
+                    time_taken_ms: Math.round(parseFloat(avgTime) * 1000),
+                    rounds_played: gameState.itemsProcessed,
+                    total_rounds: gameState.maxItems
+                })
+            }).catch(err => console.error('Score save failed:', err));
+        }
+
+        function updateDisplay() {
+            document.getElementById('item-count').textContent = `${gameState.itemsProcessed}/${gameState.maxItems}`;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('streak').textContent = gameState.streak;
+
+            const accuracy = gameState.itemsProcessed > 0 
+                ? Math.round((gameState.correct / gameState.itemsProcessed) * 100)
+                : 100;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        function updateStatus(message, type = '') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status-message ' + type;
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('rule-display').style.display = 'none';
+            document.getElementById('item-display').style.display = 'none';
+            document.getElementById('category-buttons').style.display = 'none';
+            document.getElementById('timer-container').style.display = 'none';
+            document.getElementById('results-summary').style.display = 'none';
+            document.getElementById('start-btn').disabled = false;
+
+            gameState = {
+                currentRuleIndex: 0,
+                currentItemIndex: 0,
+                itemsProcessed: 0,
+                maxItems: 30,
+                score: 0,
+                correct: 0,
+                streak: 0,
+                bestStreak: 0,
+                isPlaying: false,
+                itemStartTime: 0,
+                responseTimes: [],
+                itemsUntilRuleChange: 0
+            };
+
+            updateStatus('Click "Start Game" to begin!');
+            updateDisplay();
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (!gameState.isPlaying) return;
+            
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                sortItem('left');
+            } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                sortItem('right');
+            }
+        });
+
+        // Initialize
+        updateDisplay();
+    </script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Count - NeuroSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #1e293b;
+        }
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+       .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            border-radius: 24px;
+            padding: 2rem;
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .game-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .game-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            color: #be185d;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .game-area {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .display-area {
+            min-height: 400px;
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .dot {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #db2777, #be185d);
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .timer {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #be185d;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        input[type="number"] {
+            width: 120px;
+            padding: 1rem;
+            font-size: 1.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #be185d;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px -1px rgba(190, 24, 93, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .next-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-2px);
+            background: #059669;
+        }
+
+        .feedback {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            min-height: 30px;
+        }
+
+        .feedback.correct {
+            color: #10b981;
+        }
+
+        .feedback.incorrect {
+            color: #ef4444;
+        }
+
+        .instructions {
+            background: #eef2ff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #be185d;
+        }
+
+        .instructions h3 {
+            color: #be185d;
+            margin-bottom: 0.5rem;
+        }
+
+        .instructions p {
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .start-screen {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .start-screen h2 {
+            color: #be185d;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 1.5rem 3rem;
+            border-radius: 16px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 2rem;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -1px rgba(190, 24, 93, 0.4);
+        }
+
+        .difficulty-select {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            padding: 1rem 2rem;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .difficulty-btn.selected {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border-color: #be185d;
+        }
+
+        .difficulty-btn:hover {
+            border-color: #be185d;
+        }
+
+        @media (max-width: 768px) {
+            .game-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .dot {
+                width: 25px;
+                height: 25px;
+            }
+
+            .display-area {
+                gap: 10px;
+                padding: 1rem;
+                min-height: 300px;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">NeuroSense</div>
+        <a href="/number-sense" class="back-btn">← Back to Number Sense games</a>
+    </header>
+
+    <div class="container">
+        <div class="game-header">
+            <h1>⚡ Quick Count</h1>
+            <p>Estimate quantities without counting - Train your subitizing skills!</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-label">Round</div>
+                <div class="stat-value" id="round">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Accuracy</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div id="startScreen" class="start-screen">
+                <h2>Choose Your Difficulty</h2>
+                <div class="instructions">
+                    <h3>How to Play:</h3>
+                    <p>Dots will appear briefly on screen. Your goal is to estimate how many dots you see WITHOUT counting them one by one. This trains your brain's natural ability to quickly perceive quantities.</p>
+                </div>
+                <div class="difficulty-select">
+                    <button class="difficulty-btn selected" data-level="easy">
+                        Easy<br><small>5-15 dots, 2s display</small>
+                    </button>
+                    <button class="difficulty-btn" data-level="medium">
+                        Medium<br><small>10-30 dots, 1.5s display</small>
+                    </button>
+                    <button class="difficulty-btn" data-level="hard">
+                        Hard<br><small>20-50 dots, 1s display</small>
+                    </button>
+                </div>
+                <button class="start-btn" onclick="startGame()">Start Game</button>
+            </div>
+
+            <div id="gameScreen" style="display: none;">
+                <div class="display-area" id="displayArea">
+                    <div class="timer" id="timer">3.0s</div>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-group">
+                        <input type="number" id="guessInput" placeholder="?" min="0" disabled>
+                        <button class="submit-btn" id="submitBtn" onclick="submitGuess()" disabled>Submit</button>
+                        <button class="next-btn" id="nextBtn" onclick="nextRound()" style="display: none;">Next Round</button>
+                    </div>
+                </div>
+
+                <div class="feedback" id="feedback"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            round: 0,
+            score: 0,
+            totalRounds: 0,
+            difficulty: 'easy',
+            currentCount: 0,
+            isPlaying: false
+        };
+
+        const difficulties = {
+            easy: { min: 5, max: 15, time: 2000 },
+            medium: { min: 10, max: 30, time: 1500 },
+            hard: { min: 20, max: 50, time: 1000 }
+        };
+
+        // Difficulty selection
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                gameState.difficulty = this.dataset.level;
+            });
+        });
+
+        let _gameStartTime = null;
+function startGame() {
+            _gameStartTime = performance.now();
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            gameState.round = 0;
+            gameState.score = 0;
+            gameState.totalRounds = 0;
+            updateStats();
+            nextRound();
+        }
+
+        function nextRound() {
+            gameState.round++;
+            gameState.totalRounds++;
+            gameState.isPlaying = true;
+            
+            updateStats();
+            
+            document.getElementById('guessInput').value = '';
+            document.getElementById('guessInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('feedback').className = 'feedback';
+            
+            const config = difficulties[gameState.difficulty];
+            gameState.currentCount = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+            
+            showDots(config.time);
+        }
+
+        function showDots(displayTime) {
+            const displayArea = document.getElementById('displayArea');
+            displayArea.innerHTML = '<div class="timer" id="timer"></div>';
+            
+            const dots = [];
+            const usedPositions = new Set();
+            
+            for (let i = 0; i < gameState.currentCount; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                
+                let position;
+                do {
+                    position = `${Math.random() * 100}%-${Math.random() * 100}%`;
+                } while (usedPositions.has(position));
+                usedPositions.add(position);
+                
+                dots.push(dot);
+                displayArea.appendChild(dot);
+            }
+            
+            let timeLeft = displayTime;
+            const timerEl = document.getElementById('timer');
+            
+            const countdown = setInterval(() => {
+                timeLeft -= 100;
+                timerEl.textContent = (timeLeft / 1000).toFixed(1) + 's';
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    hideDots();
+                }
+            }, 100);
+        }
+
+        function hideDots() {
+            const displayArea = document.getElementById('displayArea');
+            displayArea.innerHTML = '<div style="font-size: 3rem; color: #be185d;">?</div>';
+            
+            document.getElementById('guessInput').disabled = false;
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('guessInput').focus();
+        }
+
+        function submitGuess() {
+            const guess = parseInt(document.getElementById('guessInput').value);
+            
+            if (isNaN(guess) || guess < 0) {
+                alert('Please enter a valid number!');
+                return;
+            }
+            
+            const difference = Math.abs(guess - gameState.currentCount);
+            const accuracy = Math.max(0, 100 - (difference / gameState.currentCount * 100));
+            
+            let points = 0;
+            let feedback = '';
+            
+            if (difference === 0) {
+                points = 100;
+                feedback = `🎯 Perfect! There were exactly ${gameState.currentCount} dots!`;
+                document.getElementById('feedback').className = 'feedback correct';
+            } else if (difference <= 2) {
+                points = 75;
+                feedback = `✨ Excellent! Very close! There were ${gameState.currentCount} dots (you guessed ${guess})`;
+                document.getElementById('feedback').className = 'feedback correct';
+            } else if (difference <= 5) {
+                points = 50;
+                feedback = `👍 Good estimate! There were ${gameState.currentCount} dots (you guessed ${guess})`;
+                document.getElementById('feedback').className = 'feedback correct';
+            } else {
+                points = Math.floor(accuracy / 2);
+                feedback = `💭 Not quite. There were ${gameState.currentCount} dots (you guessed ${guess})`;
+                document.getElementById('feedback').className = 'feedback incorrect';
+            }
+            
+            gameState.score += points;
+            
+            document.getElementById('feedback').textContent = feedback;
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            document.getElementById('guessInput').disabled = true;
+            
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('round').textContent = gameState.round;
+            document.getElementById('score').textContent = gameState.score;
+            
+            const accuracy = gameState.totalRounds > 0 
+                ? Math.round((gameState.score / (gameState.totalRounds * 100)) * 100)
+                : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+
+            if (gameState.round > 10) {
+                fetch('/save_score', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ game_name: 'Quick Count', score: gameState.score, rounds_played: gameState.round, total_rounds: gameState.round, time_taken_ms: _gameStartTime ? Math.round(performance.now() - _gameStartTime) : null })
+                }).catch(() => {});
+            }
+        }
+
+        // Enter key to submit
+        document.getElementById('guessInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !this.disabled) {
+                submitGuess();
+            }
+        });
+    </script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+
+<script>
+// Save score on page unload (handles tab close / navigation away)
+window.addEventListener('beforeunload', function() {
+  const _score = (function(){ try{ return gameState.score; }catch(e){ return 0; } })();
+  if (_score > 0) {
+    navigator.sendBeacon('/save_score', JSON.stringify({
+      game_name: 'Quick Count',
+      score: _score,
+      time_taken_ms: _gameStartTime ? Math.round(performance.now() - _gameStartTime) : null
+    }));
+  }
+});
+</script>
+</body>
+</html>

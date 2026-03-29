@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Snapback Game - NeuroSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 60px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem 0;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar.expanded {
+            width: 250px;
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #be185d;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-toggle:hover {
+            background-color: #eef2ff;
+        }
+
+        .nav-item {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            color: #64748b;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background-color: #eef2ff;
+            color: #be185d;
+        }
+
+        .nav-item.active {
+            background-color: #be185d;
+            color: white;
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            min-width: 20px;
+        }
+
+        .nav-text {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .sidebar.expanded .nav-text {
+            opacity: 1;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 60px;
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.expanded + .main-content {
+            margin-left: 250px;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        /* Game Container */
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .game-header h1 {
+            font-size: 2.5rem;
+            color: #be185d;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .game-header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        /* Game Board */
+        .game-board {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            margin-bottom: 2rem;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: linear-gradient(135deg, #fce7f3, #eef2ff);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #be185d;
+            margin-top: 0.25rem;
+        }
+
+        /* Story Container */
+        .story-container {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid #eab308;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .story-title {
+            font-size: 1.5rem;
+            color: #92400e;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .story-text {
+            color: #78350f;
+            line-height: 1.8;
+            font-size: 1.05rem;
+            white-space: pre-line;
+        }
+
+        /* Timer */
+        .timer-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .timer {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #be185d;
+            background: linear-gradient(135deg, #fce7f3, #eef2ff);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .timer.warning {
+            color: #ef4444;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Question Section */
+        .question-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .question-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            color: #be185d;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .answers-grid {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .answer-btn {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 1.25rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .answer-btn:hover {
+            border-color: #be185d;
+            background: linear-gradient(135deg, #fce7f3, #fff);
+            transform: translateX(8px);
+        }
+
+        .answer-btn.correct {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            border-color: #22c55e;
+            color: #166534;
+        }
+
+        .answer-btn.incorrect {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .answer-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        /* Control Buttons */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+        }
+
+        .control-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .control-btn.secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* Status Message */
+        .status-message {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 1.5rem 0;
+            min-height: 2rem;
+            color: #be185d;
+        }
+
+        .feedback {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border-left: 4px solid #3b82f6;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+            color: #1e40af;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* Instructions */
+        .instructions {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #6366f1;
+        }
+
+        .instructions h3 {
+            color: #3730a3;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .instructions ol {
+            color: #4338ca;
+            margin-left: 1.5rem;
+            line-height: 1.6;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.expanded {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .game-header h1 {
+                font-size: 2rem;
+            }
+
+            .game-board {
+                padding: 2rem 1rem;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">NeuroSense</div>
+            <button class="back-btn" onclick="window.location.href='/memory-challenge'">
+                ← Back to Memory Games
+            </button>
+        </header>
+
+        <!-- Game Container -->
+        <div class="game-container">
+            <div class="game-header">
+                <h1>📖 Story Snapback Game</h1>
+                <p>Read carefully and test your memory!</p>
+            </div>
+
+            <div class="game-board">
+                <!-- Instructions -->
+                <div class="instructions" id="instructions">
+                    <h3>📚 How to Play:</h3>
+                    <ol>
+                        <li>Click "Start Story" to begin reading</li>
+                        <li>Read the story carefully - you have 60 seconds</li>
+                        <li>Answer questions about key details from the story</li>
+                        <li>Score points for correct answers!</li>
+                    </ol>
+                </div>
+
+                <!-- Stats Bar -->
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-label">Story</div>
+                        <div class="stat-value" id="story-number">1</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Score</div>
+                        <div class="stat-value" id="score">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Correct</div>
+                        <div class="stat-value" id="correct">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Streak</div>
+                        <div class="stat-value" id="streak">0</div>
+                    </div>
+                </div>
+
+                <!-- Story Reading Section -->
+                <div id="story-section">
+                    <div class="timer-container" id="timer-container" style="display: none;">
+                        <div class="timer" id="timer">60</div>
+                        <p style="color: #64748b; margin-top: 0.5rem;">seconds remaining</p>
+                    </div>
+
+                    <div class="story-container" id="story-container" style="display: none;">
+                        <h2 class="story-title" id="story-title"></h2>
+                        <div class="story-text" id="story-text"></div>
+                    </div>
+                </div>
+
+                <!-- Question Section -->
+                <div id="question-section" class="question-section">
+                    <div class="question-text" id="question-text"></div>
+                    <div class="answers-grid" id="answers-grid"></div>
+                    <div class="feedback" id="feedback"></div>
+                </div>
+
+                <!-- Status Message -->
+                <div class="status-message" id="status">Ready to begin your first story?</div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <button class="control-btn" id="start-btn" onclick="startStory()">
+                        📚 Start Story
+                    </button>
+                    <button class="control-btn" id="next-btn" onclick="nextQuestion()" style="display: none;">
+                        ➡️ Next Question
+                    </button>
+                    <button class="control-btn secondary" onclick="resetGame()">
+                        🔄 New Game
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Story database
+        const stories = [
+            {
+                title: "The Lost Compass",
+                text: `Emma discovered an old brass compass in her grandmother's attic on a rainy Tuesday afternoon. The compass had intricate engravings of ships and sea creatures around its edge. When she opened it, she noticed the needle pointed northwest instead of north. 
+                
+Her grandmother explained that the compass belonged to her great-grandfather, Captain James Morrison, who was a merchant sailor in the 1920s. He had used this very compass to navigate through a terrible storm off the coast of Norway, which saved his entire crew of twelve sailors.
+                
+The compass had been passed down through three generations, and now it was Emma's turn to keep it safe. She decided to display it on her bedroom shelf, right next to her collection of vintage maps.`,
+                questions: [
+                    {
+                        question: "What day did Emma find the compass?",
+                        answers: ["Monday", "Tuesday", "Wednesday", "Thursday"],
+                        correct: 1
+                    },
+                    {
+                        question: "Which direction did the compass needle point?",
+                        answers: ["North", "South", "Northwest", "Northeast"],
+                        correct: 2
+                    },
+                    {
+                        question: "What was the great-grandfather's name?",
+                        answers: ["Captain James Morrison", "Captain John Morrison", "Captain James Martin", "Captain Jack Morrison"],
+                        correct: 0
+                    },
+                    {
+                        question: "How many sailors were in the crew?",
+                        answers: ["Ten", "Eleven", "Twelve", "Thirteen"],
+                        correct: 2
+                    }
+                ]
+            },
+            {
+                title: "The Bakery Mystery",
+                text: `Marcus worked at Sweet Dreams Bakery on Fifth Avenue, where he started his shift every morning at 5:30 AM. On Friday, he noticed that exactly seven blueberry muffins were missing from the display case, even though the shop hadn't opened yet.
+                
+He checked the security footage and saw a small tabby cat with white paws entering through the back window at 4:15 AM. The cat carefully selected only the blueberry muffins, ignoring the chocolate chip cookies and cinnamon rolls completely.
+                
+Marcus named the cat "Muffin" and started leaving out a small saucer of milk each morning. The bakery owner, Mrs. Chen, thought it was charming and decided to make it part of their marketing, posting photos of Muffin on their Instagram account every Tuesday and Friday.`,
+                questions: [
+                    {
+                        question: "What time did Marcus start his shift?",
+                        answers: ["5:00 AM", "5:30 AM", "6:00 AM", "6:30 AM"],
+                        correct: 1
+                    },
+                    {
+                        question: "How many muffins were missing?",
+                        answers: ["Five", "Six", "Seven", "Eight"],
+                        correct: 2
+                    },
+                    {
+                        question: "What color were the cat's paws?",
+                        answers: ["Black", "Gray", "White", "Orange"],
+                        correct: 2
+                    },
+                    {
+                        question: "What did Marcus name the cat?",
+                        answers: ["Blueberry", "Muffin", "Cookie", "Sweet"],
+                        correct: 1
+                    }
+                ]
+            },
+            {
+                title: "The Garden Discovery",
+                text: `Sophia was planting tomatoes in her backyard garden when her shovel struck something hard three inches below the surface. She carefully dug around it and discovered a small metal box, about the size of a shoebox, covered in rust.
+                
+Inside the box, wrapped in faded blue cloth, was a collection of old photographs from the 1950s. The photos showed a young couple at their wedding, holding hands in front of a white church. Written on the back of one photo was "Robert & Margaret, June 12, 1953."
+                
+Sophia took the box to the local historical society, where they discovered that Robert and Margaret had lived in her house sixty years ago. Their granddaughter, now living in Seattle, was thrilled to receive these precious family memories that she never knew existed.`,
+                questions: [
+                    {
+                        question: "What was Sophia planting?",
+                        answers: ["Carrots", "Tomatoes", "Lettuce", "Peppers"],
+                        correct: 1
+                    },
+                    {
+                        question: "How deep was the box buried?",
+                        answers: ["Two inches", "Three inches", "Four inches", "Five inches"],
+                        correct: 1
+                    },
+                    {
+                        question: "What color was the cloth?",
+                        answers: ["Red", "Green", "Blue", "Yellow"],
+                        correct: 2
+                    },
+                    {
+                        question: "What year was the wedding?",
+                        answers: ["1951", "1952", "1953", "1954"],
+                        correct: 2
+                    }
+                ]
+            }
+        ];
+
+        // Game state
+        let gameState = {
+            currentStoryIndex: 0,
+            currentQuestionIndex: 0,
+            score: 0,
+            correctAnswers: 0,
+            streak: 0,
+            timer: null,
+            timeRemaining: 60
+        };
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('expanded');
+        }
+
+let _gameStartTime = null;
+        function startStory() {
+            _gameStartTime = _gameStartTime || performance.now();
+            const story = stories[gameState.currentStoryIndex];
+            
+            // Hide instructions and start button
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('start-btn').style.display = 'none';
+            
+            // Show story
+            document.getElementById('story-container').style.display = 'block';
+            document.getElementById('timer-container').style.display = 'block';
+            document.getElementById('story-title').textContent = story.title;
+            document.getElementById('story-text').textContent = story.text;
+            
+            // Start timer
+            gameState.timeRemaining = 60;
+            updateTimer();
+            gameState.timer = setInterval(() => {
+                gameState.timeRemaining--;
+                updateTimer();
+                
+                if (gameState.timeRemaining <= 10) {
+                    document.getElementById('timer').classList.add('warning');
+                }
+                
+                if (gameState.timeRemaining <= 0) {
+                    clearInterval(gameState.timer);
+                    showQuestions();
+                }
+            }, 1000);
+            
+            document.getElementById('status').textContent = 'Read carefully! Questions coming soon...';
+        }
+
+        function updateTimer() {
+            document.getElementById('timer').textContent = gameState.timeRemaining;
+        }
+
+        function showQuestions() {
+            // Hide story
+            document.getElementById('story-container').style.display = 'none';
+            document.getElementById('timer-container').style.display = 'none';
+            
+            // Show question section
+            document.getElementById('question-section').classList.add('active');
+            
+            // Display first question
+            displayQuestion();
+            
+            document.getElementById('status').textContent = 'Answer the questions based on what you remember!';
+        }
+
+        function displayQuestion() {
+            const story = stories[gameState.currentStoryIndex];
+            const question = story.questions[gameState.currentQuestionIndex];
+            
+            document.getElementById('question-text').textContent = `Question ${gameState.currentQuestionIndex + 1} of ${story.questions.length}: ${question.question}`;
+            
+            const answersGrid = document.getElementById('answers-grid');
+            answersGrid.innerHTML = '';
+            
+            question.answers.forEach((answer, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.textContent = answer;
+                btn.onclick = () => checkAnswer(index);
+                answersGrid.appendChild(btn);
+            });
+            
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('next-btn').style.display = 'none';
+        }
+
+        function checkAnswer(selectedIndex) {
+            const story = stories[gameState.currentStoryIndex];
+            const question = story.questions[gameState.currentQuestionIndex];
+            const buttons = document.querySelectorAll('.answer-btn');
+            
+            // Disable all buttons
+            buttons.forEach(btn => btn.disabled = true);
+            
+            // Check if correct
+            const isCorrect = selectedIndex === question.correct;
+            
+            // Highlight selected answer
+            buttons[selectedIndex].classList.add(isCorrect ? 'correct' : 'incorrect');
+            
+            // Always show the correct answer
+            if (!isCorrect) {
+                buttons[question.correct].classList.add('correct');
+            }
+            
+            // Update stats
+            if (isCorrect) {
+                gameState.score += 10;
+                gameState.correctAnswers++;
+                gameState.streak++;
+                
+                document.getElementById('feedback').textContent = '✅ Correct! Well done!';
+                document.getElementById('feedback').style.background = 'linear-gradient(135deg, #dcfce7, #bbf7d0)';
+                document.getElementById('feedback').style.borderColor = '#22c55e';
+                document.getElementById('feedback').style.color = '#166534';
+            } else {
+                gameState.streak = 0;
+                
+                document.getElementById('feedback').textContent = `❌ Incorrect. The correct answer was: ${question.answers[question.correct]}`;
+                document.getElementById('feedback').style.background = 'linear-gradient(135deg, #fee2e2, #fecaca)';
+                document.getElementById('feedback').style.borderColor = '#ef4444';
+                document.getElementById('feedback').style.color = '#991b1b';
+            }
+            
+            document.getElementById('feedback').classList.add('show');
+            updateDisplay();
+            
+            // Show next button
+            document.getElementById('next-btn').style.display = 'inline-flex';
+        }
+
+        function nextQuestion() {
+            const story = stories[gameState.currentStoryIndex];
+            gameState.currentQuestionIndex++;
+            
+            if (gameState.currentQuestionIndex < story.questions.length) {
+                displayQuestion();
+            } else {
+                // Move to next story or end game
+                gameState.currentStoryIndex++;
+                gameState.currentQuestionIndex = 0;
+                
+                if (gameState.currentStoryIndex < stories.length) {
+                    document.getElementById('question-section').classList.remove('active');
+                    document.getElementById('instructions').style.display = 'block';
+                    document.getElementById('start-btn').style.display = 'inline-flex';
+                    document.getElementById('next-btn').style.display = 'none';
+                    document.getElementById('status').textContent = 'Great job! Ready for the next story?';
+                    updateDisplay();
+                } else {
+                    showGameOver();
+                }
+            }
+        }
+
+        function showGameOver() {
+            document.getElementById('question-section').classList.remove('active');
+            document.getElementById('status').innerHTML = `
+                🎉 Game Complete!<br>
+                Final Score: ${gameState.score}<br>
+                Correct Answers: ${gameState.correctAnswers} / ${stories.reduce((sum, s) => sum + s.questions.length, 0)}
+            `;
+            document.getElementById('next-btn').style.display = 'none';
+            fetch('/save_score', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ game_name: 'Story Snapback', score: gameState.score, time_taken_ms: _gameStartTime ? Math.round(performance.now() - _gameStartTime) : null })
+            }).catch(() => {});
+        }
+
+        function resetGame() {
+            clearInterval(gameState.timer);
+            
+            gameState = {
+                currentStoryIndex: 0,
+                currentQuestionIndex: 0,
+                score: 0,
+                correctAnswers: 0,
+                streak: 0,
+                timer: null,
+                timeRemaining: 60
+            };
+            
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('story-container').style.display = 'none';
+            document.getElementById('timer-container').style.display = 'none';
+            document.getElementById('question-section').classList.remove('active');
+            document.getElementById('start-btn').style.display = 'inline-flex';
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('timer').classList.remove('warning');
+            document.getElementById('status').textContent = 'Ready to begin your first story?';
+            
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('story-number').textContent = gameState.currentStoryIndex + 1;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('correct').textContent = gameState.correctAnswers;
+            document.getElementById('streak').textContent = gameState.streak;
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+            const toggle = document.querySelector('.sidebar-toggle');
+            if (window.innerWidth <= 768 && sidebar.classList.contains('expanded') &&
+                !sidebar.contains(e.target) && toggle && !toggle.contains(e.target)) {
+                sidebar.classList.remove('expanded');
+            }
+        });
+
+        // Initialize display
+        updateDisplay();
+    </script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+
+<script>
+// Save score on page unload (handles tab close / navigation away)
+window.addEventListener('beforeunload', function() {
+  const _score = (function(){ try{ return gameState.score; }catch(e){ return 0; } })();
+  if (_score > 0) {
+    navigator.sendBeacon('/save_score', JSON.stringify({
+      game_name: 'Story Snapback',
+      score: _score,
+      time_taken_ms: _gameStartTime ? Math.round(performance.now() - _gameStartTime) : null
+    }));
+  }
+});
+</script>
+</body>
+</html>ector('.sidebar-toggle');
+            
+            if (window.innerWidth <= 768 && sidebar.classList.contains('expanded') && 
+                !sidebar.contains(e.target) && !toggle.contains(e.target)) {
+                sidebar.classList.remove('expanded');
+            }
+        });
+
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>

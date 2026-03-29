@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stroop Color-Word Test - NeuroSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            color: #64748b;
+        }
+
+        .main-content {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .game-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .game-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(219, 39, 119, 0.1), 0 8px 16px rgba(147, 51, 234, 0.05);
+            max-width: 600px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #db2777, #be185d, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            color: #64748b;
+            opacity: 0.8;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, rgba(219, 39, 119, 0.1), rgba(168, 85, 247, 0.1));
+            padding: 15px;
+            border-radius: 15px;
+            flex: 1;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(219, 39, 119, 0.2);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #db2777, #be185d, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .word-display {
+            background: linear-gradient(135deg, rgba(219, 39, 119, 0.1), rgba(168, 85, 247, 0.1));
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px 0;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(219, 39, 119, 0.2);
+            font-size: 4rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        .word-display.pulse {
+            animation: pulse 0.3s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .color-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .color-btn {
+            width: 80px;
+            height: 80px;
+            border: none;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .color-btn:active {
+            transform: translateY(0);
+        }
+
+        .color-btn.correct {
+            animation: correctPulse 0.5s ease-in-out;
+        }
+
+        .color-btn.incorrect {
+            animation: incorrectShake 0.5s ease-in-out;
+        }
+
+        @keyframes correctPulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+                box-shadow: 0 0 20px #00ff00;
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes incorrectShake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .red-btn {
+            background-color: #ff4757;
+            color: white;
+        }
+
+        .blue-btn {
+            background-color: #3742fa;
+            color: white;
+        }
+
+        .green-btn {
+            background-color: #2ed573;
+            color: white;
+        }
+
+        .yellow-btn {
+            background-color: #ffa502;
+            color: white;
+        }
+
+        .purple-btn {
+            background-color: #8e44ad;
+            color: white;
+        }
+
+        .orange-btn {
+            background-color: #ff6b35;
+            color: white;
+        }
+
+        .control-buttons {
+            margin-top: 30px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 15px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(219, 39, 119, 0.2);
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(219, 39, 119, 0.3);
+        }
+
+        .btn.start {
+            background: linear-gradient(135deg, #a855f7, #8b5cf6);
+        }
+
+        .instructions {
+            background: linear-gradient(135deg, rgba(219, 39, 119, 0.1), rgba(168, 85, 247, 0.1));
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #64748b;
+            border: 1px solid rgba(219, 39, 119, 0.2);
+        }
+
+        .difficulty-selector {
+            margin: 20px 0;
+        }
+
+        .difficulty-btn {
+            background: rgba(255, 255, 255, 0.9);
+            color: #64748b;
+            border: 2px solid rgba(219, 39, 119, 0.2);
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .difficulty-btn.active {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border-color: #db2777;
+        }
+
+        .difficulty-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(219, 39, 119, 0.2);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(219, 39, 119, 0.1);
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+            border: 1px solid rgba(219, 39, 119, 0.2);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #db2777, #be185d, #a855f7);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .game-over {
+            display: none;
+            background: rgba(0, 0, 0, 0.8);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .game-over-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 24px;
+            text-align: center;
+            max-width: 400px;
+            border: 1px solid rgba(219, 39, 119, 0.2);
+            box-shadow: 0 20px 40px rgba(219, 39, 119, 0.1);
+        }
+
+        .performance-meter {
+            margin: 20px 0;
+            font-size: 1.2rem;
+            color: #64748b;
+        }
+
+        .meter-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(219, 39, 119, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+            border: 1px solid rgba(219, 39, 119, 0.2);
+        }
+
+        .meter-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .excellent {
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+        }
+
+        .good {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+
+        .needs-improvement {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        @media (max-width: 768px) {
+            .game-wrapper {
+                padding: 1rem;
+            }
+
+            .game-container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .word-display {
+                font-size: 3rem;
+            }
+
+            .color-btn {
+                width: 70px;
+                height: 70px;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+
+<body>
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">NeuroSense</div>
+            <button class="back-btn" onclick="window.location.href='/focus-training'">
+                ← Back to Focus Training
+            </button>
+        </header>
+
+        <!-- Game Wrapper -->
+        <div class="game-wrapper">
+            <div class="game-container">
+                <h1>🧠 Stroop Test</h1>
+                <p class="subtitle">Click the color of the INK, not the word!</p>
+
+                <div class="instructions">
+                    <strong>Instructions:</strong> A color word will appear on screen. Click the button that matches the COLOR
+                    of the text, not what the word says. This tests your attention and inhibition control!
+                </div>
+
+                <div class="difficulty-selector">
+                    <button class="difficulty-btn active" data-difficulty="easy">Easy</button>
+                    <button class="difficulty-btn" data-difficulty="medium">Medium</button>
+                    <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+                </div>
+
+                <div class="game-stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Score</div>
+                        <div class="stat-value" id="score">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Accuracy</div>
+                        <div class="stat-value" id="accuracy">0%</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Time</div>
+                        <div class="stat-value" id="timer">30</div>
+                    </div>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+
+                <div class="word-display" id="wordDisplay">Ready?</div>
+
+                <div class="color-buttons">
+                    <button class="color-btn red-btn" data-color="red">RED</button>
+                    <button class="color-btn blue-btn" data-color="blue">BLUE</button>
+                    <button class="color-btn green-btn" data-color="green">GREEN</button>
+                    <button class="color-btn yellow-btn" data-color="yellow">YELLOW</button>
+                    <button class="color-btn purple-btn" data-color="purple">PURPLE</button>
+                    <button class="color-btn orange-btn" data-color="orange">ORANGE</button>
+                </div>
+
+                <div class="control-buttons">
+                    <button class="btn start" id="startBtn">Start Game</button>
+                    <button class="btn" id="resetBtn">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <div class="game-over-content">
+            <h2>🎉 Game Complete!</h2>
+            <div class="performance-meter">
+                <div>Final Score: <span id="finalScore">0</span></div>
+                <div>Accuracy: <span id="finalAccuracy">0%</span></div>
+                <div>Performance Rating:</div>
+                <div class="meter-bar">
+                    <div class="meter-fill" id="performanceMeter"></div>
+                </div>
+                <div id="performanceText">Good job!</div>
+            </div>
+            <button class="btn start" onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        class StroopGame {
+            constructor() {
+                this.constructorTimer = createGameTimer();
+                this.words = ['RED', 'BLUE', 'GREEN', 'YELLOW', 'PURPLE', 'ORANGE'];
+                this.colors = {
+                    red: '#ff4757',
+                    blue: '#3742fa',
+                    green: '#2ed573',
+                    yellow: '#ffa502',
+                    purple: '#8e44ad',
+                    orange: '#ff6b35'
+                };
+                this.colorNames = Object.keys(this.colors);
+
+                this.score = 0;
+                this.totalAttempts = 0;
+                this.correctAttempts = 0;
+                this.currentWord = '';
+                this.currentColor = '';
+                this.isGameActive = false;
+                this.timeLeft = 30;
+                this.gameTimer = null;
+                this.difficulty = 'easy';
+                this.wordChangeInterval = null;
+
+                this.initializeElements();
+                this.setupEventListeners();
+            }
+
+            initializeElements() {
+                this.wordDisplay = document.getElementById('wordDisplay');
+                this.scoreElement = document.getElementById('score');
+                this.accuracyElement = document.getElementById('accuracy');
+                this.timerElement = document.getElementById('timer');
+                this.startBtn = document.getElementById('startBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.gameOverModal = document.getElementById('gameOver');
+                this.progressFill = document.getElementById('progressFill');
+                this.colorButtons = document.querySelectorAll('.color-btn');
+                this.difficultyButtons = document.querySelectorAll('.difficulty-btn');
+            }
+
+            setupEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startGame());
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+
+                this.colorButtons.forEach(btn => {
+                    btn.addEventListener('click', (e) => this.handleColorClick(e));
+                });
+
+                this.difficultyButtons.forEach(btn => {
+                    btn.addEventListener('click', (e) => this.setDifficulty(e));
+                });
+            }
+
+            setDifficulty(e) {
+                this.difficultyButtons.forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                this.difficulty = e.target.dataset.difficulty;
+
+                // Adjust game parameters based on difficulty
+                switch (this.difficulty) {
+                    case 'easy':
+                        this.timeLeft = 30;
+                        break;
+                    case 'medium':
+                        this.timeLeft = 45;
+                        break;
+                    case 'hard':
+                        this.timeLeft = 60;
+                        break;
+                }
+
+                this.timerElement.textContent = this.timeLeft;
+            }
+
+            startGame() {
+                this.constructorTimer.start();
+                this.isGameActive = true;
+                this.startBtn.textContent = 'Playing...';
+                this.startBtn.disabled = true;
+
+                this.generateNewWord();
+                this.startTimer();
+                this.startWordChanging();
+            }
+
+            startTimer() {
+                this.gameTimer = setInterval(() => {
+                    this.timeLeft--;
+                    this.timerElement.textContent = this.timeLeft;
+
+                    const totalTime = this.difficulty === 'easy' ? 30 :
+                        this.difficulty === 'medium' ? 45 : 60;
+                    const progress = ((totalTime - this.timeLeft) / totalTime) * 100;
+                    this.progressFill.style.width = progress + '%';
+
+                    if (this.timeLeft <= 0) {
+                        this.endGame();
+                    }
+                }, 1000);
+            }
+
+            startWordChanging() {
+                const intervals = {
+                    easy: 2000,
+                    medium: 1500,
+                    hard: 1000
+                };
+
+                this.wordChangeInterval = setInterval(() => {
+                    if (this.isGameActive) {
+                        this.generateNewWord();
+                    }
+                }, intervals[this.difficulty]);
+            }
+
+            generateNewWord() {
+                const word = this.words[Math.floor(Math.random() * this.words.length)];
+                let color = this.colorNames[Math.floor(Math.random() * this.colorNames.length)];
+
+                // For harder difficulties, increase mismatch probability
+                const mismatchProbability = this.difficulty === 'easy' ? 0.7 :
+                    this.difficulty === 'medium' ? 0.8 : 0.9;
+
+                if (Math.random() < mismatchProbability) {
+                    // Ensure word and color don't match
+                    while (word.toLowerCase() === color) {
+                        color = this.colorNames[Math.floor(Math.random() * this.colorNames.length)];
+                    }
+                }
+
+                this.currentWord = word;
+                this.currentColor = color;
+
+                this.wordDisplay.textContent = word;
+                this.wordDisplay.style.color = this.colors[color];
+                this.wordDisplay.classList.add('pulse');
+
+                setTimeout(() => {
+                    this.wordDisplay.classList.remove('pulse');
+                }, 300);
+            }
+
+            handleColorClick(e) {
+                if (!this.isGameActive) return;
+
+                const clickedColor = e.target.dataset.color;
+                this.totalAttempts++;
+
+                if (clickedColor === this.currentColor) {
+                    this.correctAttempts++;
+                    this.score += this.difficulty === 'easy' ? 10 :
+                        this.difficulty === 'medium' ? 15 : 20;
+
+                    e.target.classList.add('correct');
+                    this.generateNewWord(); // Immediate new word on correct answer
+                } else {
+                    e.target.classList.add('incorrect');
+                }
+
+                // Remove animation classes after animation completes
+                setTimeout(() => {
+                    e.target.classList.remove('correct', 'incorrect');
+                }, 500);
+
+                this.updateStats();
+            }
+
+            updateStats() {
+                this.scoreElement.textContent = this.score;
+                const accuracy = this.totalAttempts > 0 ?
+                    Math.round((this.correctAttempts / this.totalAttempts) * 100) : 0;
+                this.accuracyElement.textContent = accuracy + '%';
+            }
+
+            endGame() {
+                const elapsed = this.constructorTimer.stop();
+                this.isGameActive = false;
+                clearInterval(this.gameTimer);
+                clearInterval(this.wordChangeInterval);
+
+                this.postResults(elapsed);
+                this.showGameOverModal();
+            }
+
+            showGameOverModal() {
+                const accuracy = this.totalAttempts > 0 ?
+                    Math.round((this.correctAttempts / this.totalAttempts) * 100) : 0;
+
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('finalAccuracy').textContent = accuracy + '%';
+
+                const performanceMeter = document.getElementById('performanceMeter');
+                const performanceText = document.getElementById('performanceText');
+
+                let performanceLevel, performanceWidth, performanceClass;
+
+                if (accuracy >= 80) {
+                    performanceLevel = 'Excellent!';
+                    performanceWidth = '100%';
+                    performanceClass = 'excellent';
+                } else if (accuracy >= 60) {
+                    performanceLevel = 'Good job!';
+                    performanceWidth = '70%';
+                    performanceClass = 'good';
+                } else {
+                    performanceLevel = 'Keep practicing!';
+                    performanceWidth = '40%';
+                    performanceClass = 'needs-improvement';
+                }
+
+                performanceMeter.style.width = performanceWidth;
+                performanceMeter.className = 'meter-fill ' + performanceClass;
+                performanceText.textContent = performanceLevel;
+
+                this.gameOverModal.style.display = 'flex';
+            }
+
+            resetGame() {
+                this.isGameActive = false;
+                clearInterval(this.gameTimer);
+                clearInterval(this.wordChangeInterval);
+
+                this.score = 0;
+                this.totalAttempts = 0;
+                this.correctAttempts = 0;
+                this.timeLeft = this.difficulty === 'easy' ? 30 :
+                    this.difficulty === 'medium' ? 45 : 60;
+
+                this.scoreElement.textContent = '0';
+                this.accuracyElement.textContent = '0%';
+                this.timerElement.textContent = this.timeLeft;
+                this.wordDisplay.textContent = 'Ready?';
+                this.wordDisplay.style.color = '#64748b';
+                this.progressFill.style.width = '0%';
+
+                this.startBtn.textContent = 'Start Game';
+                this.startBtn.disabled = false;
+                this.gameOverModal.style.display = 'none';
+            }
+
+            async postResults(elapsed) {
+                const accuracy = this.totalAttempts > 0 ? Math.round((this.correctAttempts / this.totalAttempts) * 100) : 0;
+                await postScore({
+                    gameName: 'FocusTraining-Stroop',
+                    score: this.score,
+                    timeTakenMs: elapsed,
+                    mode: 'limit-rounds',
+                    roundsPlayed: this.totalAttempts,
+                    extra: { accuracy: accuracy, difficulty: this.difficulty }
+                });
+            }
+        }
+
+        // Initialize the game
+        const game = new StroopGame();
+
+        // Global function for restart button in modal
+        function restartGame() {
+            game.resetGame();
+        }
+    </script>
+<script>
+// === NeuroSense common helpers ===
+function createGameTimer(){let s=null;return{start(){s=performance.now()},stop(){if(s===null) return 0;const e=performance.now()-s;s=null;return Math.round(e)}}}
+async function postScore({gameName,score,timeTakenMs,mode=null,roundsPlayed=null,extra=null}){try{const res=await fetch('/save_score',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({game_name:gameName,score:score,time_taken_ms:timeTakenMs,mode:mode,rounds_played: roundsPlayed, total_rounds: roundsPlayed,extra:extra})});const data=await res.json();if(!res.ok){console.error('Save failed:',data);alert('Could not save your result.');}return data}catch(err){console.error('Save error:',err);alert('Could not save your result.');return null}}
+
+</script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body></html>

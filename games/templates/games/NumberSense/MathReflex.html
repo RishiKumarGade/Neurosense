@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Reflex - NeuroSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #1e293b;
+        }
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+       .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            border-radius: 24px;
+            padding: 2rem;
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .game-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .game-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            color: #be185d;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .game-area {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .start-screen {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .start-screen h2 {
+            color: #be185d;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .instructions {
+            background: #eef2ff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #be185d;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            color: #be185d;
+            margin-bottom: 0.5rem;
+        }
+
+        .instructions p {
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .mode-select {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .mode-btn {
+            padding: 1.5rem;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .mode-btn.selected {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border-color: #be185d;
+        }
+
+        .mode-btn:hover {
+            border-color: #be185d;
+            transform: translateY(-2px);
+        }
+
+        .mode-btn .mode-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .mode-btn .mode-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .mode-btn .mode-desc {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 1.5rem 3rem;
+            border-radius: 16px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -1px rgba(190, 24, 93, 0.4);
+        }
+
+        .play-area {
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .timer-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #db2777, #be185d);
+            transition: width 0.1s linear;
+        }
+
+        .question-display {
+            min-height: 200px;
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .equation {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #be185d;
+            margin-bottom: 1rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .answer-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .option-btn {
+            padding: 2rem;
+            background: white;
+            border: 3px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #be185d;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover {
+            border-color: #be185d;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 12px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .option-btn.correct {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+            animation: pulse 0.3s ease;
+        }
+
+        .option-btn.incorrect {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .combo-display {
+            margin-top: 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        .combo-display.active {
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .result-screen {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .result-screen h2 {
+            color: #be185d;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .result-stat {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 16px;
+            border-left: 4px solid #be185d;
+        }
+
+        .result-stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-stat-value {
+            color: #be185d;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .secondary-btn {
+            background: white;
+            color: #be185d;
+            border: 2px solid #be185d;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .secondary-btn:hover {
+            background: #be185d;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .game-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .equation {
+                font-size: 2.5rem;
+            }
+
+            .option-btn {
+                padding: 1.5rem;
+                font-size: 1.5rem;
+            }
+
+            .answer-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">NeuroSense</div>
+        <a href="/number-sense" class="back-btn">← Back to Number Sense Games</a>
+    </header>
+
+    <div class="container">
+        <div class="game-header">
+            <h1>🔢 Math Reflex</h1>
+            <p>Lightning-fast mental arithmetic challenge!</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Streak</div>
+                <div class="stat-value" id="streak">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Correct</div>
+                <div class="stat-value" id="correct">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Time</div>
+                <div class="stat-value" id="timeDisplay">60s</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div id="startScreen" class="start-screen">
+                <h2>Choose Your Challenge</h2>
+                <div class="instructions">
+                    <h3>How to Play:</h3>
+                    <p>🎯 Solve math problems as quickly as possible</p>
+                    <p>⚡ Build streaks for bonus points</p>
+                    <p>⏱️ 60 seconds to get the highest score</p>
+                    <p>🎮 Click or press number keys (1-4) to answer</p>
+                </div>
+
+                <div class="mode-select">
+                    <button class="mode-btn selected" data-mode="addition">
+                        <div class="mode-icon">➕</div>
+                        <div class="mode-title">Addition</div>
+                        <div class="mode-desc">Add two numbers</div>
+                    </button>
+                    <button class="mode-btn" data-mode="subtraction">
+                        <div class="mode-icon">➖</div>
+                        <div class="mode-title">Subtraction</div>
+                        <div class="mode-desc">Subtract numbers</div>
+                    </button>
+                    <button class="mode-btn" data-mode="multiplication">
+                        <div class="mode-icon">✖️</div>
+                        <div class="mode-title">Multiplication</div>
+                        <div class="mode-desc">Multiply numbers</div>
+                    </button>
+                    <button class="mode-btn" data-mode="mixed">
+                        <div class="mode-icon">🎲</div>
+                        <div class="mode-title">Mixed</div>
+                        <div class="mode-desc">All operations</div>
+                    </button>
+                </div>
+
+                <button class="start-btn" onclick="startGame()">Start Challenge</button>
+            </div>
+
+            <div id="playScreen" style="display: none;">
+                <div class="timer-bar">
+                    <div class="timer-fill" id="timerFill"></div>
+                </div>
+
+                <div class="play-area">
+                    <div class="question-display">
+                        <div class="equation" id="equation">5 + 3 = ?</div>
+                        <div class="combo-display" id="combo"></div>
+                    </div>
+
+                    <div class="answer-options" id="answerOptions">
+                        <!-- Options will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="resultScreen" class="result-screen" style="display: none;">
+                <h2>🎉 Challenge Complete!</h2>
+                
+                <div class="result-stats">
+                    <div class="result-stat">
+                        <div class="result-stat-label">Final Score</div>
+                        <div class="result-stat-value" id="finalScore">0</div>
+                    </div>
+                    <div class="result-stat">
+                        <div class="result-stat-label">Questions Answered</div>
+                        <div class="result-stat-value" id="totalAnswered">0</div>
+                    </div>
+                    <div class="result-stat">
+                        <div class="result-stat-label">Accuracy</div>
+                        <div class="result-stat-value" id="accuracy">0%</div>
+                    </div>
+                    <div class="result-stat">
+                        <div class="result-stat-label">Best Streak</div>
+                        <div class="result-stat-value" id="bestStreak">0</div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="start-btn" onclick="startGame()">Play Again</button>
+                    <button class="secondary-btn" onclick="showStartScreen()">Change Mode</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            mode: 'addition',
+            score: 0,
+            streak: 0,
+            bestStreak: 0,
+            correct: 0,
+            total: 0,
+            timeLeft: 60,
+            currentAnswer: 0,
+            isPlaying: false,
+            timer: null
+        };
+
+        // Mode selection
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                gameState.mode = this.dataset.mode;
+            });
+        });
+
+        let _gameStartTime = null;
+function startGame() {
+            _gameStartTime = performance.now();
+            gameState = {
+                mode: gameState.mode,
+                score: 0,
+                streak: 0,
+                bestStreak: 0,
+                correct: 0,
+                total: 0,
+                timeLeft: 60,
+                currentAnswer: 0,
+                isPlaying: true,
+                timer: null
+            };
+
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('playScreen').style.display = 'block';
+            document.getElementById('resultScreen').style.display = 'none';
+
+            updateStats();
+            generateQuestion();
+            startTimer();
+        }
+
+        function startTimer() {
+            gameState.timer = setInterval(() => {
+                gameState.timeLeft--;
+                updateTimer();
+
+                if (gameState.timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            document.getElementById('timeDisplay').textContent = gameState.timeLeft + 's';
+            const percentage = (gameState.timeLeft / 60) * 100;
+            document.getElementById('timerFill').style.width = percentage + '%';
+        }
+
+        function generateQuestion() {
+            let num1, num2, operator, answer;
+
+            const mode = gameState.mode === 'mixed' 
+                ? ['addition', 'subtraction', 'multiplication'][Math.floor(Math.random() * 3)]
+                : gameState.mode;
+
+            switch(mode) {
+                case 'addition':
+                    num1 = Math.floor(Math.random() * 50) + 1;
+                    num2 = Math.floor(Math.random() * 50) + 1;
+                    operator = '+';
+                    answer = num1 + num2;
+                    break;
+                case 'subtraction':
+                    num1 = Math.floor(Math.random() * 50) + 20;
+                    num2 = Math.floor(Math.random() * num1);
+                    operator = '-';
+                    answer = num1 - num2;
+                    break;
+                case 'multiplication':
+                    num1 = Math.floor(Math.random() * 12) + 1;
+                    num2 = Math.floor(Math.random() * 12) + 1;
+                    operator = '×';
+                    answer = num1 * num2;
+                    break;
+            }
+
+            gameState.currentAnswer = answer;
+            document.getElementById('equation').textContent = `${num1} ${operator} ${num2} = ?`;
+
+            generateOptions(answer);
+        }
+
+        function generateOptions(correctAnswer) {
+            const options = [correctAnswer];
+            
+            while (options.length < 4) {
+                const offset = Math.floor(Math.random() * 20) - 10;
+                const option = correctAnswer + offset;
+                if (option > 0 && !options.includes(option)) {
+                    options.push(option);
+                }
+            }
+
+            // Shuffle options
+            options.sort(() => Math.random() - 0.5);
+
+            const container = document.getElementById('answerOptions');
+            container.innerHTML = '';
+
+            options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option;
+                btn.onclick = () => checkAnswer(option, btn);
+                btn.dataset.key = index + 1;
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected, btn) {
+            if (!gameState.isPlaying) return;
+
+            gameState.total++;
+
+            // Disable all buttons temporarily
+            document.querySelectorAll('.option-btn').forEach(b => b.style.pointerEvents = 'none');
+
+            if (selected === gameState.currentAnswer) {
+                btn.classList.add('correct');
+                gameState.correct++;
+                gameState.streak++;
+                gameState.bestStreak = Math.max(gameState.bestStreak, gameState.streak);
+
+                // Calculate score with streak bonus
+                const basePoints = 10;
+                const streakBonus = Math.min(gameState.streak * 2, 50);
+                gameState.score += basePoints + streakBonus;
+
+                // Show combo
+                if (gameState.streak > 1) {
+                    const comboEl = document.getElementById('combo');
+                    comboEl.textContent = `🔥 ${gameState.streak}x Streak! +${streakBonus} bonus`;
+                    comboEl.classList.add('active');
+                    setTimeout(() => comboEl.classList.remove('active'), 500);
+                }
+
+                setTimeout(() => {
+                    document.getElementById('combo').textContent = '';
+                    nextQuestion();
+                }, 500);
+            } else {
+                btn.classList.add('incorrect');
+                gameState.streak = 0;
+                document.getElementById('combo').textContent = '';
+
+                // Highlight correct answer
+                document.querySelectorAll('.option-btn').forEach(b => {
+                    if (parseInt(b.textContent) === gameState.currentAnswer) {
+                        b.classList.add('correct');
+                    }
+                });
+
+                setTimeout(() => {
+                    nextQuestion();
+                }, 1000);
+            }
+
+            updateStats();
+        }
+
+        function nextQuestion() {
+            document.querySelectorAll('.option-btn').forEach(b => {
+                b.classList.remove('correct', 'incorrect');
+                b.style.pointerEvents = 'auto';
+            });
+            generateQuestion();
+        }
+
+        function updateStats() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('streak').textContent = gameState.streak;
+            document.getElementById('correct').textContent = gameState.correct;
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.timer);
+
+            document.getElementById('playScreen').style.display = 'none';
+            document.getElementById('resultScreen').style.display = 'block';
+
+            const accuracy = gameState.total > 0 
+                ? Math.round((gameState.correct / gameState.total) * 100)
+                : 0;
+
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('totalAnswered').textContent = gameState.total;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            document.getElementById('bestStreak').textContent = gameState.bestStreak;
+
+            fetch('/save_score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ game_name: 'Math Reflex', score: gameState.score, rounds_played: gameState.total, total_rounds: gameState.total, total_rounds: gameState.total, time_taken_ms: _gameStartTime ? Math.round(performance.now() - _gameStartTime) : null })
+            }).catch(() => {});
+        }
+
+        function showStartScreen() {
+            document.getElementById('startScreen').style.display = 'block';
+            document.getElementById('playScreen').style.display = 'none';
+            document.getElementById('resultScreen').style.display = 'none';
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!gameState.isPlaying) return;
+            
+            const key = e.key;
+            if (['1', '2', '3', '4'].includes(key)) {
+                const btn = document.querySelector(`[data-key="${key}"]`);
+                if (btn) {
+                    btn.click();
+                }
+            }
+        });
+    </script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body>
+</html>

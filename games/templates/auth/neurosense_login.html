@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroSense - Login</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
+    body { background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #db2777 100%); display:flex; min-height:100vh; justify-content:center; align-items:center; }
+    .form-container { background:white; padding:2rem; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.1); width:100%; max-width:400px; }
+    h1 { text-align:center; color:#db2777; margin-bottom:1.5rem; }
+    .form-group { margin-bottom:1rem; }
+    label { display:block; margin-bottom:0.5rem; color:#64748b; font-weight:500; }
+    input { width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:8px; font-size:1rem; }
+    input:focus { outline:none; border-color:#db2777; }
+    .btn { width:100%; padding:1rem; background:linear-gradient(135deg, #db2777, #be185d); color:white; border:none; border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer; margin-top:1rem; }
+    .btn:hover { opacity:0.9; }
+    .message { padding:1rem; margin-bottom:1rem; border-radius:8px; text-align:center; }
+    .error { background:#fee2e2; color:#dc2626; border:1px solid #fecaca; }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1>Login to NeuroSense</h1>
+    {% if message %}
+      <div class="message error">{{ message }}</div>
+    {% endif %}
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" required autocomplete="current-password" />
+      </div>
+      <button type="submit" class="btn">Login</button>
+    </form>
+    <p style="text-align:center;margin-top:1rem;color:#64748b;">New to NeuroSense? <a href="/signup" style="color:#db2777;">Sign Up</a></p>
+  </div>
+</body>
+</html>

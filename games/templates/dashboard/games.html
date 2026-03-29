@@ -1,0 +1,32 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Games - NeuroSense</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; background: linear-gradient(135deg, #fdf2f8 0%, #db2777 100%); }
+    h1 { color: #db2777; text-align: center; margin-bottom: 2rem; }
+    .categories { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+    .category { background: white; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; color: #64748b; font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: all 0.3s; }
+    .category:hover { background: #db2777; color: white; transform: translateY(-2px); }
+  </style>
+</head>
+<body>
+  <div style="padding:12px 24px;background:white;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between">
+    <a href="/dashboard" style="color:#db2777;text-decoration:none;font-weight:600;font-size:.9rem">← Home</a>
+    <a href="/cognitive-dashboard" style="color:#64748b;text-decoration:none;font-size:.85rem">📊 Dashboard</a>
+  </div>
+  <h1>🧠 Brain Training Categories</h1>
+  <div class="categories">
+    <a href="/focus-training" class="category">Focus Training</a>
+    <a href="/logic-puzzles" class="category">Logic Puzzles</a>
+    <a href="/memory-challenge" class="category">Memory Challenge</a>
+    <a href="/number-sense" class="category">Number Sense</a>
+    <a href="/speed-processing" class="category">Speed Processing</a>
+    <a href="/word-games" class="category">Word Games</a>
+  </div>
+  <p style="text-align:center;margin-top:2rem;color:#64748b;">Play games → Auto‑save scores → Track progress!</p>
+</body>
+</html>

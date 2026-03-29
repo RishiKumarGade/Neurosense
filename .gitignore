@@ -1,0 +1,28 @@
+# Environment
+.env
+venv/
+myenv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Flask sessions
+.flask_sessions/
+
+# ML model weights and dataset (large — distribute separately)
+ml/models/*.pt
+mri/dataset/
+mri/ml/models/*.pt
+
+# OS
+.DS_Store
+Thumbs.db

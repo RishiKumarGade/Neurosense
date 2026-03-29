@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pattern Numbers - Identify Hidden Patterns</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            color: #1e293b;
+        }
+        .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            z-index: 1000;
+        }
+
+            .app-header .header-content {
+                max-width: 1200px;
+                margin: 0 auto;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: #be185d;
+            }
+
+            .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #db2777, #be185d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, #fdf2f8, #fce7f3);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            color: #be185d;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #db2777;
+        }
+
+        .difficulty-selector {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            color: #64748b;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn.active {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border-color: #be185d;
+        }
+
+        .game-area {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .instruction {
+            font-size: 1.2rem;
+            color: #475569;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            padding: 1rem;
+            background: #fdf2f8;
+            border-radius: 12px;
+        }
+
+        .pattern-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            min-height: 120px;
+        }
+
+        .number-circle {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            box-shadow: 0 6px 16px rgba(219, 39, 119, 0.4);
+            animation: floatIn 0.5s ease;
+            position: relative;
+        }
+
+        @keyframes floatIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .connector {
+            font-size: 1.5rem;
+            color: #be185d;
+            font-weight: 700;
+        }
+
+        .question-circle {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 800;
+            box-shadow: 0 6px 16px rgba(251, 191, 36, 0.4);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 6px 16px rgba(251, 191, 36, 0.4);
+            }
+            50% { 
+                transform: scale(1.08);
+                box-shadow: 0 8px 20px rgba(251, 191, 36, 0.6);
+            }
+        }
+
+        .pattern-hint {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            color: #92400e;
+            display: inline-block;
+        }
+
+        .input-section {
+            margin: 2rem 0;
+        }
+
+        .answer-input {
+            width: 200px;
+            padding: 1rem 1.5rem;
+            font-size: 1.8rem;
+            text-align: center;
+            border: 3px solid #e5e7eb;
+            border-radius: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            transition: all 0.3s ease;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: #db2777;
+            box-shadow: 0 0 0 4px rgba(219, 39, 119, 0.1);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(219, 39, 119, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #be185d;
+            border: 2px solid #be185d;
+        }
+
+        .btn-secondary:hover {
+            background: #fdf2f8;
+        }
+
+        .btn-hint {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        }
+
+        .feedback {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feedback.correct {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #059669;
+        }
+
+        .feedback.incorrect {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #dc2626;
+        }
+
+        .pattern-explanation {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f1f5f9;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #475569;
+        }
+
+        .game-over {
+            text-align: center;
+            display: none;
+        }
+
+        .game-over.show {
+            display: block;
+        }
+
+        .game-over h2 {
+            font-size: 2rem;
+            color: #db2777;
+            margin-bottom: 1rem;
+        }
+
+        .final-score {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #db2777, #be185d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .performance-badge {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+
+        .badge-excellent {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .badge-good {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .badge-fair {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .hints-used {
+            color: #be185d;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .number-circle, .question-circle {
+                width: 70px;
+                height: 70px;
+                font-size: 1.5rem;
+            }
+
+            .answer-input {
+                width: 150px;
+                font-size: 1.5rem;
+            }
+
+            .pattern-display {
+                gap: 0.5rem;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+    <header class="app-header">
+    <div class="header-content">
+        <div class="logo">NeuroSense</div>
+        <a href="/number-sense" class="back-btn">← Back to Number Sense Games</a>
+    </div>
+</header>
+    <div class="container">
+        <div class="header">
+            <h1>🔢 Pattern Numbers</h1>
+            <p>Identify the hidden numerical patterns</p>
+        </div>
+
+        <div class="game-card">
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-label">Round</div>
+                    <div class="stat-value" id="round">1</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Score</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Correct</div>
+                    <div class="stat-value" id="correct">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Hints Left</div>
+                    <div class="stat-value" id="hints">3</div>
+                </div>
+            </div>
+
+            <div class="difficulty-selector" id="difficultySelector">
+                <button class="difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
+                <button class="difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
+                <button class="difficulty-btn" onclick="setDifficulty('hard')">Hard</button>
+            </div>
+
+            <div class="game-area" id="gameArea">
+                <div class="instruction" id="instruction">
+                    🧠 Study the pattern and find the missing number!
+                </div>
+
+                <div class="pattern-display" id="patternDisplay">
+                    <!-- Pattern will be inserted here -->
+                </div>
+
+                <div id="hintDisplay"></div>
+
+                <div class="input-section">
+                    <input type="number" 
+                           class="answer-input" 
+                           id="answerInput" 
+                           placeholder="?"
+                           autocomplete="off">
+                </div>
+
+                <div class="control-buttons">
+                    <button class="btn btn-hint" onclick="showHint()" id="hintBtn">
+                        💡 Show Hint
+                    </button>
+                    <button class="btn" onclick="checkAnswer()" id="submitBtn">
+                        Submit Answer
+                    </button>
+                    <button class="btn btn-secondary" onclick="skipQuestion()">
+                        Skip
+                    </button>
+                </div>
+
+                <div class="feedback" id="feedback"></div>
+            </div>
+
+            <div class="game-over" id="gameOver">
+                <h2>🎉 Pattern Master!</h2>
+                <div class="final-score" id="finalScore">0</div>
+                <div class="performance-badge" id="performanceBadge"></div>
+                <p class="hints-used" id="hintsUsedText"></p>
+                <div class="control-buttons">
+                    <button class="btn" onclick="restartGame()">Play Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRound = 1;
+        let score = 0;
+        let correctAnswers = 0;
+        let hintsRemaining = 3;
+        let maxRounds = 10;
+        let difficulty = 'easy';
+        let currentPattern = null;
+        let currentAnswer = 0;
+        let answered = false;
+        let hintUsed = false;
+
+        const patterns = {
+            easy: [
+                { type: 'arithmetic', name: 'Add constant', gen: (start) => {
+                    const diff = Math.floor(Math.random() * 5) + 2;
+                    return { 
+                        sequence: [start, start + diff, start + 2*diff, start + 3*diff],
+                        answer: start + 4*diff,
+                        explanation: `Each number increases by ${diff}`,
+                        hint: `Look at the difference between consecutive numbers`
+                    };
+                }},
+                { type: 'arithmetic', name: 'Subtract constant', gen: (start) => {
+                    const diff = Math.floor(Math.random() * 4) + 2;
+                    const s = start + diff * 4;
+                    return { 
+                        sequence: [s, s - diff, s - 2*diff, s - 3*diff],
+                        answer: s - 4*diff,
+                        explanation: `Each number decreases by ${diff}`,
+                        hint: `The numbers are getting smaller by the same amount`
+                    };
+                }},
+                { type: 'multiply', name: 'Double', gen: (start) => {
+                    const s = Math.max(start, 2);
+                    return { 
+                        sequence: [s, s*2, s*4, s*8],
+                        answer: s*16,
+                        explanation: `Each number doubles (×2)`,
+                        hint: `Each number is multiplied by 2`
+                    };
+                }},
+                { type: 'pattern', name: 'Alternating add', gen: (start) => {
+                    const add1 = Math.floor(Math.random() * 3) + 2;
+                    const add2 = Math.floor(Math.random() * 3) + 2;
+                    return { 
+                        sequence: [start, start + add1, start + add1 + add2, start + add1 + add2 + add1],
+                        answer: start + add1 + add2 + add1 + add2,
+                        explanation: `Alternates adding ${add1} and ${add2}`,
+                        hint: `The pattern alternates between two different additions`
+                    };
+                }}
+            ],
+            medium: [
+                { type: 'arithmetic', name: 'Add increasing', gen: (start) => {
+                    const base = Math.floor(Math.random() * 3) + 2;
+                    return { 
+                        sequence: [start, start + base, start + base + (base+1), start + base + (base+1) + (base+2)],
+                        answer: start + base + (base+1) + (base+2) + (base+3),
+                        explanation: `Add ${base}, then ${base+1}, then ${base+2}, then ${base+3}`,
+                        hint: `The amount added increases by 1 each time`
+                    };
+                }},
+                { type: 'multiply', name: 'Multiply by constant', gen: (start) => {
+                    const mult = Math.floor(Math.random() * 2) + 3;
+                    const s = Math.max(start, 2);
+                    return { 
+                        sequence: [s, s*mult, s*mult*mult, s*mult*mult*mult],
+                        answer: s*Math.pow(mult, 4),
+                        explanation: `Each number is multiplied by ${mult}`,
+                        hint: `Each number is the previous number multiplied by the same value`
+                    };
+                }},
+                { type: 'squares', name: 'Perfect squares', gen: (start) => {
+                    const n = Math.max(start, 2);
+                    return { 
+                        sequence: [n*n, (n+1)*(n+1), (n+2)*(n+2), (n+3)*(n+3)],
+                        answer: (n+4)*(n+4),
+                        explanation: `Perfect squares: ${n}², ${n+1}², ${n+2}², ${n+3}², ${n+4}²`,
+                        hint: `These are perfect square numbers`
+                    };
+                }},
+                { type: 'fibonacci', name: 'Fibonacci-like', gen: (start) => {
+                    const a = start;
+                    const b = start + Math.floor(Math.random() * 3) + 1;
+                    return { 
+                        sequence: [a, b, a+b, a+2*b],
+                        answer: 2*a+3*b,
+                        explanation: `Each number is the sum of the previous two`,
+                        hint: `Add the previous two numbers to get the next one`
+                    };
+                }}
+            ],
+            hard: [
+                { type: 'complex', name: 'Squared differences', gen: (start) => {
+                    const n = Math.max(start, 2);
+                    return { 
+                        sequence: [n, n + 1*1, n + 1*1 + 2*2, n + 1*1 + 2*2 + 3*3],
+                        answer: n + 1*1 + 2*2 + 3*3 + 4*4,
+                        explanation: `Add 1², then 2², then 3², then 4²`,
+                        hint: `The differences between numbers are perfect squares`
+                    };
+                }},
+                { type: 'alternating', name: 'Two patterns', gen: (start) => {
+                    const mult = 2;
+                    const add = Math.floor(Math.random() * 5) + 3;
+                    return { 
+                        sequence: [start, start*mult, start*mult + add, (start*mult + add)*mult],
+                        answer: (start*mult + add)*mult + add,
+                        explanation: `Alternates: multiply by ${mult}, then add ${add}`,
+                        hint: `Two different operations alternate`
+                    };
+                }},
+                { type: 'prime', name: 'Prime numbers', gen: () => {
+                    const primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47];
+                    const start = Math.floor(Math.random() * (primes.length - 5));
+                    return { 
+                        sequence: [primes[start], primes[start+1], primes[start+2], primes[start+3]],
+                        answer: primes[start+4],
+                        explanation: `These are consecutive prime numbers`,
+                        hint: `These are prime numbers in sequence`
+                    };
+                }},
+                { type: 'power', name: 'Powers of number', gen: (start) => {
+                    const base = Math.max(start, 2);
+                    const exp = 2;
+                    return { 
+                        sequence: [Math.pow(base, exp), Math.pow(base, exp+1), Math.pow(base, exp+2), Math.pow(base, exp+3)],
+                        answer: Math.pow(base, exp+4),
+                        explanation: `Powers of ${base}: ${base}², ${base}³, ${base}⁴, ${base}⁵, ${base}⁶`,
+                        hint: `Each number is a power of ${base}`
+                    };
+                }}
+            ]
+        };
+
+        function setDifficulty(level) {
+            difficulty = level;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            restartGame();
+        }
+
+let _gameStartTime = null;
+        function generatePattern() {
+            if (!_gameStartTime) _gameStartTime = performance.now();
+            answered = false;
+            hintUsed = false;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').disabled = false;
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('hintBtn').disabled = false;
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('hintDisplay').innerHTML = '';
+
+            const patternList = patterns[difficulty];
+            const pattern = patternList[Math.floor(Math.random() * patternList.length)];
+            const startNum = Math.floor(Math.random() * 5) + 2;
+            
+            currentPattern = pattern.gen(startNum);
+            currentAnswer = currentPattern.answer;
+
+            // Display pattern
+            const patternHTML = currentPattern.sequence.map(num => 
+                `<div class="number-circle">${num}</div><span class="connector">→</span>`
+            ).join('') + '<div class="question-circle">?</div>';
+
+            document.getElementById('patternDisplay').innerHTML = patternHTML;
+        }
+
+        function showHint() {
+            if (hintsRemaining > 0 && !answered && !hintUsed) {
+                hintUsed = true;
+                hintsRemaining--;
+                document.getElementById('hints').textContent = hintsRemaining;
+                
+                const hintHTML = `<div class="pattern-hint">💡 Hint: ${currentPattern.hint}</div>`;
+                document.getElementById('hintDisplay').innerHTML = hintHTML;
+                document.getElementById('hintBtn').disabled = true;
+            }
+        }
+
+        function checkAnswer() {
+            if (answered) return;
+
+            const userAnswer = parseInt(document.getElementById('answerInput').value);
+            
+            if (isNaN(userAnswer)) {
+                alert('Please enter a valid number!');
+                return;
+            }
+
+            answered = true;
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('hintBtn').disabled = true;
+
+            const feedback = document.getElementById('feedback');
+            const explanationHTML = `<div class="pattern-explanation">📊 Pattern: ${currentPattern.explanation}</div>`;
+
+            if (userAnswer === currentAnswer) {
+                const points = hintUsed ? 5 : 10;
+                score += points;
+                correctAnswers++;
+                
+                feedback.innerHTML = `
+                    ✓ Correct! The answer is ${currentAnswer}
+                    <br><span style="font-size: 1.3rem;">+${points} points</span>
+                    ${explanationHTML}
+                `;
+                feedback.className = 'feedback correct show';
+            } else {
+                feedback.innerHTML = `
+                    ✗ Incorrect. You answered ${userAnswer}, but the correct answer is ${currentAnswer}
+                    ${explanationHTML}
+                `;
+                feedback.className = 'feedback incorrect show';
+            }
+
+            updateStats();
+
+            if (currentRound < maxRounds) {
+                setTimeout(() => {
+                    currentRound++;
+                    generatePattern();
+                }, 3000);
+            } else {
+                setTimeout(endGame, 3000);
+            }
+        }
+
+        function skipQuestion() {
+            if (answered) return;
+
+            answered = true;
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('hintBtn').disabled = true;
+
+            const feedback = document.getElementById('feedback');
+            const explanationHTML = `<div class="pattern-explanation">📊 Pattern: ${currentPattern.explanation}</div>`;
+            
+            feedback.innerHTML = `
+                Skipped. The correct answer was ${currentAnswer}
+                ${explanationHTML}
+            `;
+            feedback.className = 'feedback incorrect show';
+
+            updateStats();
+
+            if (currentRound < maxRounds) {
+                setTimeout(() => {
+                    currentRound++;
+                    generatePattern();
+                }, 3000);
+            } else {
+                setTimeout(endGame, 3000);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('round').textContent = currentRound;
+            document.getElementById('score').textContent = score;
+            document.getElementById('correct').textContent = correctAnswers;
+        }
+
+        function endGame() {
+            document.getElementById('gameArea').style.display = 'none';
+            document.getElementById('gameOver').classList.add('show');
+            document.getElementById('finalScore').textContent = score;
+
+            const accuracy = (correctAnswers / maxRounds) * 100;
+            const badge = document.getElementById('performanceBadge');
+            
+            if (accuracy >= 80) {
+                badge.textContent = '🏆 Excellent!';
+                badge.className = 'performance-badge badge-excellent';
+            } else if (accuracy >= 60) {
+                badge.textContent = '⭐ Good Job!';
+                badge.className = 'performance-badge badge-good';
+            } else {
+                badge.textContent = '💪 Keep Practicing!';
+                badge.className = 'performance-badge badge-fair';
+            }
+
+            document.getElementById('hintsUsedText').textContent = 
+                `Hints used: ${3 - hintsRemaining} | Accuracy: ${accuracy.toFixed(0)}%`;
+
+            fetch('/save_score', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ game_name: 'Pattern Numbers', score: score, rounds_played: maxRounds, total_rounds: maxRounds, time_taken_ms: _gameStartTime ? Math.round(performance.now() - _gameStartTime) : null, extra: { accuracy: Math.round(accuracy) } })
+            }).catch(() => {});
+        }
+
+        function restartGame() {
+            _gameStartTime = null;
+            currentRound = 1;
+            score = 0;
+            correctAnswers = 0;
+            hintsRemaining = 3;
+
+            document.getElementById('gameArea').style.display = 'block';
+            document.getElementById('gameOver').classList.remove('show');
+
+            updateStats();
+            document.getElementById('hints').textContent = hintsRemaining;
+            generatePattern();
+        }
+
+        // Enter key to submit
+        document.getElementById('answerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !answered) {
+                checkAnswer();
+            }
+        });
+
+        // Initialize game
+        generatePattern();
+    </script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body>
+</html>

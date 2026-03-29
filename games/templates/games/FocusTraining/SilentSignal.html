@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silent Signal - NeuroSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            color: #64748b;
+        }
+
+        .main-content {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .game-header h1 {
+            font-size: 2.5rem;
+            color: #be185d;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .game-header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        .game-board {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 2rem;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: linear-gradient(135deg, #fce7f3, #eef2ff);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #be185d;
+            margin-top: 0.25rem;
+        }
+
+        /* Instructions */
+        .instructions {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #6366f1;
+        }
+
+        .instructions h3 {
+            color: #3730a3;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .instructions p {
+            color: #4338ca;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .instructions .warning {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid #fca5a5;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        /* Challenge Type Selector */
+        .challenge-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .challenge-btn {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .challenge-btn:hover {
+            border-color: #be185d;
+            color: #be185d;
+        }
+
+        .challenge-btn.active {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border-color: #be185d;
+        }
+
+        /* Display Grid */
+        .display-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 2rem 0;
+            padding: 2rem;
+            background: linear-gradient(135deg, #fce7f3, #f8fafc);
+            border-radius: 16px;
+            border: 2px solid rgba(219, 39, 119, 0.2);
+        }
+
+        .grid-item {
+            aspect-ratio: 1;
+            background: white;
+            border: 3px solid #e2e8f0;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .grid-item:hover {
+            transform: scale(1.05);
+            border-color: #be185d;
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.2);
+        }
+
+        .grid-item.changed {
+            animation: subtle-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes subtle-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .grid-item.correct-click {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            border-color: #22c55e;
+            animation: success-pop 0.5s ease;
+        }
+
+        .grid-item.wrong-click {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border-color: #ef4444;
+            animation: error-shake 0.5s ease;
+        }
+
+        @keyframes success-pop {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        @keyframes error-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        /* Pattern Display */
+        .pattern-display {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-radius: 16px;
+            margin: 2rem 0;
+            border: 3px solid #eab308;
+        }
+
+        .pattern-title {
+            color: #78350f;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .pattern-shapes {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .pattern-shape {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+        }
+
+        .control-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .control-btn.secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* Status Message */
+        .status-message {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 1.5rem 0;
+            min-height: 2rem;
+            color: #be185d;
+        }
+
+        .status-message.success {
+            color: #22c55e;
+        }
+
+        .status-message.error {
+            color: #ef4444;
+        }
+
+        /* Timer */
+        .timer-container {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .timer {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #be185d;
+            background: linear-gradient(135deg, #fce7f3, #eef2ff);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-header h1 {
+                font-size: 2rem;
+            }
+
+            .game-board {
+                padding: 2rem 1rem;
+            }
+
+            .display-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+
+            .grid-item {
+                font-size: 2rem;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">NeuroSense</div>
+            <button class="back-btn" onclick="window.location.href='/focus-training'">
+                ← Back to Focus Training
+            </button>
+        </header>
+
+        <!-- Game Container -->
+        <div class="game-container">
+            <div class="game-header">
+                <h1>🤫 Silent Signal</h1>
+                <p>Spot subtle visual changes - no sound cues!</p>
+            </div>
+
+            <div class="game-board">
+                <!-- Instructions -->
+                <div class="instructions" id="instructions">
+                    <h3>👁️ How to Play:</h3>
+                    <p>Watch the grid carefully for subtle visual changes</p>
+                    <p>ONE item will change (color, size, rotation, or position)</p>
+                    <p>Click the changed item as quickly as possible</p>
+                    <p>No sound cues - rely purely on visual attention!</p>
+                    <p class="warning">⚠️ Changes are subtle - focus carefully!</p>
+                </div>
+
+                <!-- Challenge Type Selector -->
+                <div class="challenge-selector" id="challenge-selector">
+                    <button class="challenge-btn active" onclick="setChallengeType('color', this)">
+                        Color Change
+                    </button>
+                    <button class="challenge-btn" onclick="setChallengeType('size', this)">
+                        Size Change
+                    </button>
+                    <button class="challenge-btn" onclick="setChallengeType('rotation', this)">
+                        Rotation
+                    </button>
+                    <button class="challenge-btn" onclick="setChallengeType('mixed', this)">
+                        Mixed (Hard)
+                    </button>
+                </div>
+
+                <!-- Stats Bar -->
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-label">Round</div>
+                        <div class="stat-value" id="round">1</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Score</div>
+                        <div class="stat-value" id="score">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Streak</div>
+                        <div class="stat-value" id="streak">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Accuracy</div>
+                        <div class="stat-value" id="accuracy">100%</div>
+                    </div>
+                </div>
+
+                <!-- Timer -->
+                <div class="timer-container" id="timer-container" style="display: none;">
+                    <div class="timer" id="timer">Observing...</div>
+                </div>
+
+                <!-- Status Message -->
+                <div class="status-message" id="status">Select challenge type and click "Start Game"!</div>
+
+                <!-- Display Grid -->
+                <div class="display-grid" id="display-grid"></div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <button class="control-btn" id="start-btn" onclick="startGame()">
+                        ▶️ Start Game
+                    </button>
+                    <button class="control-btn secondary" onclick="resetGame()">
+                        🔄 Reset Game
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MAX_ROUNDS = 10;
+        let sessionTimer = null;
+
+        const symbols = ['🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '⚫', '⚪', '🟤', '🔶', '🔷', '🔸', '🔹', '⭐', '💎', '🌟'];
+        const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6'];
+
+        let gameState = {
+            challengeType: 'color',
+            round: 1,
+            score: 0,
+            streak: 0,
+            correct: 0,
+            total: 0,
+            isPlaying: false,
+            changedIndex: -1,
+            gridItems: [],
+            observationTimer: null,
+            gridSize: 12
+        };
+
+        function setChallengeType(type, el) {
+            gameState.challengeType = type;
+            document.querySelectorAll('.challenge-btn').forEach(btn => btn.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function startGame() {
+ sessionTimer = createGameTimer(); sessionTimer.start();
+            gameState.isPlaying = true;
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('challenge-selector').style.display = 'none';
+            document.getElementById('timer-container').style.display = 'block';
+            document.getElementById('start-btn').disabled = true;
+
+            createInitialGrid();
+            startObservationPhase();
+        }
+
+        function createInitialGrid() {
+            const grid = document.getElementById('display-grid');
+            grid.innerHTML = '';
+            gameState.gridItems = [];
+
+            for (let i = 0; i < gameState.gridSize; i++) {
+                const item = document.createElement('div');
+                item.className = 'grid-item';
+                
+                const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                item.textContent = symbol;
+                item.style.color = color;
+                item.dataset.index = i;
+                item.dataset.originalSymbol = symbol;
+                item.dataset.originalColor = color;
+                item.dataset.originalSize = '2.5rem';
+                item.dataset.originalRotation = '0deg';
+                
+                item.addEventListener('click', () => handleItemClick(i));
+                grid.appendChild(item);
+                gameState.gridItems.push(item);
+            }
+        }
+
+        function startObservationPhase() {
+            updateStatus('Memorize the current state...');
+            document.getElementById('timer').textContent = 'Observing...';
+
+            // Disable clicks during observation
+            gameState.gridItems.forEach(item => item.style.pointerEvents = 'none');
+
+            setTimeout(() => {
+                makeSubtleChange();
+            }, 2000);
+        }
+
+        function makeSubtleChange() {
+            gameState.changedIndex = Math.floor(Math.random() * gameState.gridSize);
+            const item = gameState.gridItems[gameState.changedIndex];
+            
+            item.classList.add('changed');
+            
+            const changeType = gameState.challengeType === 'mixed' 
+                ? ['color', 'size', 'rotation'][Math.floor(Math.random() * 3)]
+                : gameState.challengeType;
+
+            switch(changeType) {
+                case 'color':
+                    const newColor = colors.find(c => c !== item.dataset.originalColor);
+                    item.style.color = newColor;
+                    break;
+                    
+                case 'size':
+                    item.style.fontSize = '3rem'; // Subtle size increase
+                    break;
+                    
+                case 'rotation':
+                    item.style.transform = 'rotate(15deg)'; // Subtle rotation
+                    break;
+            }
+
+            // Enable clicks for detection phase
+            gameState.gridItems.forEach(item => item.style.pointerEvents = 'auto');
+            
+            updateStatus('❗ Something changed! Click the item that changed.');
+            document.getElementById('timer').textContent = 'Find the change!';
+        }
+
+        function handleItemClick(index) {
+            if (!gameState.isPlaying) return;
+
+            gameState.total++;
+            const item = gameState.gridItems[index];
+
+            if (index === gameState.changedIndex) {
+                // Correct!
+                gameState.correct++;
+                gameState.streak++;
+                gameState.score += 50 + (gameState.streak * 5);
+                
+                item.classList.remove('changed');
+                item.classList.add('correct-click');
+                
+                updateStatus('✅ Excellent observation!', 'success');
+                
+                setTimeout(() => {
+                    nextRound();
+                }, 1500);
+            } else {
+                // Wrong!
+                gameState.streak = 0;
+                item.classList.add('wrong-click');
+                
+                // Highlight the correct answer
+                gameState.gridItems[gameState.changedIndex].classList.remove('changed');
+                gameState.gridItems[gameState.changedIndex].classList.add('correct-click');
+                
+                updateStatus('❌ Wrong! The correct item is highlighted.', 'error');
+                
+                setTimeout(() => {
+                    item.classList.remove('wrong-click');
+                    nextRound();
+                }, 2000);
+            }
+
+            updateDisplay();
+        }
+
+        function nextRound() {
+  if(gameState.round>MAX_ROUNDS){ finishGame(); return; }
+            gameState.round++;
+            updateDisplay();
+            createInitialGrid();
+            startObservationPhase();
+        }
+
+        function updateDisplay() {
+            document.getElementById('round').textContent = `${gameState.round}/${MAX_ROUNDS}`;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('streak').textContent = gameState.streak;
+
+            const accuracy = gameState.total > 0 
+                ? Math.round((gameState.correct / gameState.total) * 100)
+                : 100;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        function updateStatus(message, type = '') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status-message ' + type;
+        }
+
+        function resetGame() {
+            gameState = {
+                challengeType: gameState.challengeType,
+                round: 1,
+                score: 0,
+                streak: 0,
+                correct: 0,
+                total: 0,
+                isPlaying: false,
+                changedIndex: -1,
+                gridItems: [],
+                observationTimer: null,
+                gridSize: 12
+            };
+
+            document.getElementById('display-grid').innerHTML = '';
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('challenge-selector').style.display = 'flex';
+            document.getElementById('timer-container').style.display = 'none';
+            document.getElementById('start-btn').disabled = false;
+
+            updateStatus('Select challenge type and click "Start Game"!');
+            updateDisplay();
+        }
+
+ async function finishGame(){
+   gameState.isPlaying = false;
+   const elapsed = sessionTimer.stop();
+   const accuracy = gameState.total > 0 ? Math.round((gameState.correct / gameState.total) * 100) : 100;
+   await postScore({
+     gameName: 'FocusTraining-SilentSignal',
+     score: gameState.score,
+     timeTakenMs: elapsed,
+     mode: 'limit-rounds',
+     roundsPlayed: gameState.round-1,
+     extra: {accuracy: accuracy, challengeType: gameState.challengeType}
+   });
+   window.location.href = '/progress';
+ }
+
+ // Initialize
+ updateDisplay();
+ </script>
+<script>
+// === NeuroSense common helpers ===
+function createGameTimer(){let s=null;return{start(){s=performance.now()},stop(){if(s===null) return 0;const e=performance.now()-s;s=null;return Math.round(e)}}}
+async function postScore({gameName,score,timeTakenMs,mode=null,roundsPlayed=null,extra=null}){try{const res=await fetch('/save_score',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({game_name:gameName,score:score,time_taken_ms:timeTakenMs,mode:mode,rounds_played: roundsPlayed, total_rounds: roundsPlayed,extra:extra})});const data=await res.json();if(!res.ok){console.error('Save failed:',data);alert('Could not save your result.');}return data}catch(err){console.error('Save error:',err);alert('Could not save your result.');return null}}
+
+</script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body></html>

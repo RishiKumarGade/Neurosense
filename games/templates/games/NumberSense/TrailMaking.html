@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trail Making Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #f1f5f9 60%, #fdf4ff 80%, #f8fafc 100%);
+            min-height: 100vh;
+            color: #64748b;
+            overflow: hidden;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            padding: 15px 20px;
+            box-shadow: 0 4px 20px rgba(219, 39, 119, 0.1);
+            border-bottom: 1px solid rgba(219, 39, 119, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+         .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            background: linear-gradient(135deg, #db2777, #be185d, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 8px 15px;
+            background: linear-gradient(135deg, rgba(219, 39, 119, 0.1), rgba(168, 85, 247, 0.1));
+            border-radius: 10px;
+            border: 1px solid rgba(219, 39, 119, 0.2);
+            font-weight: 600;
+            min-width: 80px;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #64748b;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #db2777, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            padding-top: 80px;
+            overflow: hidden;
+        }
+
+        .trail-area {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 80px);
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .trail-node {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffffff, #f8fafc);
+            border: 3px solid #db2777;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #db2777;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(219, 39, 119, 0.2);
+            user-select: none;
+            z-index: 10;
+        }
+
+        .trail-node:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(219, 39, 119, 0.3);
+        }
+
+        .trail-node.completed {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border-color: #be185d;
+        }
+
+
+
+        .trail-node.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border-color: #dc2626;
+            animation: shake 0.5s;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .trail-line {
+            position: absolute;
+            height: 3px;
+            background: linear-gradient(90deg, #db2777, #a855f7);
+            border-radius: 2px;
+            opacity: 0.8;
+            z-index: 5;
+            transform-origin: left center;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            font-size: 1em;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #a855f7, #8b5cf6);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(219, 39, 119, 0.25);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(219, 39, 119, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .modal h2 {
+            background: linear-gradient(135deg, #db2777, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .modal p {
+            color: #64748b;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .instructions {
+            text-align: left;
+            background: rgba(219, 39, 119, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid rgba(219, 39, 119, 0.1);
+        }
+
+        .instructions h3 {
+            color: #db2777;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #64748b;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .completion-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(34, 197, 94, 0.95);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 1.2em;
+            font-weight: 600;
+            z-index: 1500;
+            animation: fadeInOut 3s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+
+            0%,
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+
+            20%,
+            80% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .stats {
+                gap: 10px;
+            }
+
+            .stat-item {
+                min-width: 60px;
+                padding: 6px 10px;
+            }
+
+            .trail-node {
+                width: 45px;
+                height: 45px;
+                font-size: 1.1em;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+
+<body>
+    <header class="header">
+    <div class="header-content">
+        <div class="logo">NeuroSense</div>
+
+        <h1>Trail Making Test</h1>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">Part</div>
+                <div class="stat-value" id="currentPart">A</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Time</div>
+                <div class="stat-value" id="timer">0:00</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Errors</div>
+                <div class="stat-value" id="errorCount">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Progress</div>
+                <div class="stat-value" id="progress">0/25</div>
+            </div>
+        </div>
+
+        <a href="/number-sense" class="back-btn">← Back to Number Sense Games</a>
+    </div>
+    </header>
+
+
+    <div class="game-container">
+        <div class="trail-area" id="trailArea"></div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-primary" id="startBtn" onclick="showInstructions()">Start Test</button>
+        <button class="btn btn-secondary" id="resetBtn" onclick="resetTest()" disabled>Reset</button>
+        <button class="btn btn-secondary" id="nextPartBtn" onclick="startPartB()" style="display: none;">Start Part
+            B</button>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div class="modal" id="instructionsModal">
+        <div class="modal-content">
+            <h2>Trail Making Test Instructions</h2>
+            <p>This test measures your processing speed, attention, and task switching abilities.</p>
+
+            <div class="instructions">
+                <h3>Part A - Numbers Only</h3>
+                <ul>
+                    <li>Connect the numbers in ascending order: 1 → 2 → 3 → ... → 25</li>
+                    <li>Click on each number in sequence</li>
+                    <li>Work as quickly and accurately as possible</li>
+                </ul>
+            </div>
+
+            <div class="instructions">
+                <h3>Part B - Numbers & Letters</h3>
+                <ul>
+                    <li>Alternate between numbers and letters: 1 → A → 2 → B → 3 → C → ...</li>
+                    <li>Continue until you reach 13 → M</li>
+                    <li>This tests your ability to switch between different types of information</li>
+                </ul>
+            </div>
+
+            <p><strong>Note:</strong> Your time will be recorded, and errors will be counted. Try to be both fast and
+                accurate!</p>
+
+            <div style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="startPartA()">Start Part A</button>
+                <button class="btn btn-secondary" onclick="hideInstructions()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPart = 'A';
+        let currentSequence = [];
+        let currentIndex = 0;
+        let startTime = null;
+        let timerInterval = null;
+        let errorCount = 0;
+        let isTestActive = false;
+        let completedConnections = [];
+
+        // Part A: Numbers 1-25
+        const partASequence = Array.from({ length: 25 }, (_, i) => (i + 1).toString());
+
+        // Part B: Alternating numbers and letters (1-A-2-B-3-C...13-M)
+        const partBSequence = [];
+        for (let i = 1; i <= 13; i++) {
+            partBSequence.push(i.toString());
+            if (i <= 13) {
+                partBSequence.push(String.fromCharCode(64 + i)); // A=65, B=66, etc.
+            }
+        }
+        partBSequence.pop(); // Remove the last letter (N) to end at M
+
+        function showInstructions() {
+            document.getElementById('instructionsModal').style.display = 'flex';
+        }
+
+        function hideInstructions() {
+            document.getElementById('instructionsModal').style.display = 'none';
+        }
+
+        function startPartA() {
+            currentPart = 'A';
+            currentSequence = [...partASequence];
+            hideInstructions();
+            initializeTest();
+        }
+
+        function startPartB() {
+            currentPart = 'B';
+            currentSequence = [...partBSequence];
+            document.getElementById('nextPartBtn').style.display = 'none';
+            initializeTest();
+        }
+
+        function initializeTest() {
+            currentIndex = 0;
+            errorCount = 0;
+            completedConnections = [];
+            isTestActive = true;
+
+            document.getElementById('currentPart').textContent = currentPart;
+            document.getElementById('errorCount').textContent = errorCount;
+            document.getElementById('progress').textContent = `0/${currentSequence.length}`;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = false;
+
+            createTrailNodes();
+            startTimer();
+        }
+
+        function createTrailNodes() {
+            const trailArea = document.getElementById('trailArea');
+            trailArea.innerHTML = '';
+
+            const areaWidth = trailArea.clientWidth - 100;
+            const areaHeight = trailArea.clientHeight - 100;
+            const nodes = [];
+
+            // Generate random positions for nodes
+            currentSequence.forEach((item, index) => {
+                let x, y, attempts = 0;
+                let validPosition = false;
+
+                // Try to find a position that doesn't overlap with existing nodes
+                while (!validPosition && attempts < 50) {
+                    x = Math.random() * areaWidth + 50;
+                    y = Math.random() * areaHeight + 50;
+
+                    validPosition = nodes.every(node => {
+                        const distance = Math.sqrt((x - node.x) ** 2 + (y - node.y) ** 2);
+                        return distance > 80; // Minimum distance between nodes
+                    });
+
+                    attempts++;
+                }
+
+                nodes.push({ x, y, item, index });
+
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'trail-node';
+                nodeElement.style.left = `${x - 25}px`;
+                nodeElement.style.top = `${y - 25}px`;
+                nodeElement.textContent = item;
+                nodeElement.dataset.index = index;
+                nodeElement.addEventListener('click', handleNodeClick);
+
+                trailArea.appendChild(nodeElement);
+            });
+
+            // Highlight the first node
+            // updateNodeStates(); // Removed to not give hints
+        }
+
+        function handleNodeClick(event) {
+            if (!isTestActive) return;
+
+            const clickedIndex = parseInt(event.target.dataset.index);
+            const node = event.target;
+
+            if (clickedIndex === currentIndex) {
+                // Correct click
+                node.classList.add('completed');
+
+                // Draw line to previous node
+                if (currentIndex > 0) {
+                    drawLine(currentIndex - 1, currentIndex);
+                }
+
+                currentIndex++;
+                document.getElementById('progress').textContent = `${currentIndex}/${currentSequence.length}`;
+
+                if (currentIndex >= currentSequence.length) {
+                    completeTest();
+                }
+                // Removed updateNodeStates() to not give hints
+            } else {
+                // Wrong click
+                errorCount++;
+                document.getElementById('errorCount').textContent = errorCount;
+                node.classList.add('error');
+
+                setTimeout(() => {
+                    node.classList.remove('error');
+                }, 500);
+            }
+        }
+
+        function updateNodeStates() {
+            // Function removed - no longer highlighting next nodes
+            // Players must find the correct sequence themselves
+        }
+
+        function drawLine(fromIndex, toIndex) {
+            const nodes = document.querySelectorAll('.trail-node');
+            const fromNode = nodes[fromIndex];
+            const toNode = nodes[toIndex];
+
+            const fromRect = fromNode.getBoundingClientRect();
+            const toRect = toNode.getBoundingClientRect();
+            const trailAreaRect = document.getElementById('trailArea').getBoundingClientRect();
+
+            const fromX = fromRect.left + fromRect.width / 2 - trailAreaRect.left;
+            const fromY = fromRect.top + fromRect.height / 2 - trailAreaRect.top;
+            const toX = toRect.left + toRect.width / 2 - trailAreaRect.left;
+            const toY = toRect.top + toRect.height / 2 - trailAreaRect.top;
+
+            const length = Math.sqrt((toX - fromX) ** 2 + (toY - fromY) ** 2);
+            const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+
+            const line = document.createElement('div');
+            line.className = 'trail-line';
+            line.style.left = `${fromX}px`;
+            line.style.top = `${fromY}px`;
+            line.style.width = `${length}px`;
+            line.style.transform = `rotate(${angle}deg)`;
+
+            document.getElementById('trailArea').appendChild(line);
+        }
+
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 100);
+        }
+
+        function updateTimer() {
+            if (!startTime) return;
+
+            const elapsed = Date.now() - startTime;
+            const minutes = Math.floor(elapsed / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            const milliseconds = Math.floor((elapsed % 1000) / 100);
+
+            document.getElementById('timer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds}`;
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function completeTest() {
+            isTestActive = false;
+            stopTimer();
+
+            const completionTime = Date.now() - startTime;
+            const minutes = Math.floor(completionTime / 60000);
+            const seconds = Math.floor((completionTime % 60000) / 1000);
+            const milliseconds = Math.floor((completionTime % 1000) / 100);
+
+            // Show completion message
+            const message = document.createElement('div');
+            message.className = 'completion-message';
+            message.textContent = `Part ${currentPart} Complete! Time: ${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds} | Errors: ${errorCount}`;
+            document.body.appendChild(message);
+
+            setTimeout(() => {
+                message.remove();
+            }, 3000);
+
+            // Show next part button if completing Part A
+            if (currentPart === 'A') {
+                document.getElementById('nextPartBtn').style.display = 'inline-block';
+                // Do not submit Part A result yet; user must complete Part B for full score submission
+                const timeSec = Math.round(completionTime / 1000);
+                const trailScore = Math.max(1, 500 - timeSec * 5 - errorCount * 10);
+                const partialMessage = document.createElement('div');
+                partialMessage.className = 'partial-notice';
+                partialMessage.textContent = 'Part A complete. Finish Part B to submit a valid score.';
+                document.body.appendChild(partialMessage);
+                setTimeout(() => partialMessage.remove(), 4000);
+            } else {
+                // Part B complete (2 of 2 rounds)
+                const timeSec = Math.round(completionTime / 1000);
+                const trailScore = Math.max(1, 1000 - timeSec * 10 - errorCount * 20);
+                fetch('/save_score', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ game_name: 'Trail Making', score: trailScore, rounds_played: 2, total_rounds: 2, total_possible: 1000, time_taken_ms: completionTime, extra: { errors: errorCount, part: 'B' } })
+                }).catch(() => {});
+            }
+
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('resetBtn').disabled = true;
+        }
+
+        function resetTest() {
+            isTestActive = false;
+            stopTimer();
+
+            document.getElementById('trailArea').innerHTML = '';
+            document.getElementById('timer').textContent = '0:00';
+            document.getElementById('errorCount').textContent = '0';
+            document.getElementById('progress').textContent = '0/25';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('resetBtn').disabled = true;
+            document.getElementById('nextPartBtn').style.display = 'none';
+
+            currentIndex = 0;
+            errorCount = 0;
+            startTime = null;
+            completedConnections = [];
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (isTestActive) {
+                // Recreate nodes on resize to maintain proper positioning
+                setTimeout(() => {
+                    createTrailNodes();
+                    // Restore completed state
+                    const nodes = document.querySelectorAll('.trail-node');
+                    for (let i = 0; i < currentIndex; i++) {
+                        nodes[i].classList.add('completed');
+                    }
+                    // Removed updateNodeStates() to not give hints
+                    // Redraw lines
+                    document.querySelectorAll('.trail-line').forEach(line => line.remove());
+                    for (let i = 1; i < currentIndex; i++) {
+                        drawLine(i - 1, i);
+                    }
+                }, 100);
+            }
+        });
+    </script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body>
+
+</html>

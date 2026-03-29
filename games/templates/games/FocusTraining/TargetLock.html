@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Target Lock - NeuroSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #fdf2f8 0%, #f8fafc 20%, #fef7ff 40%, #fce7f3 100%);
+            min-height: 100vh;
+            color: #64748b;
+        }
+
+        .main-content {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #be185d;
+        }
+
+        .back-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .game-header h1 {
+            font-size: 2.5rem;
+            color: #be185d;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .game-header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        .game-board {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            margin-bottom: 2rem;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: linear-gradient(135deg, #fce7f3, #eef2ff);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #be185d;
+            margin-top: 0.25rem;
+        }
+
+        /* Instructions */
+        .instructions {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #6366f1;
+        }
+
+        .instructions h3 {
+            color: #3730a3;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .instructions p {
+            color: #4338ca;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .target-info {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+            text-align: center;
+            font-weight: 600;
+            color: #78350f;
+            font-size: 1.1rem;
+        }
+
+        /* Game Area */
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(135deg, #fce7f3, #f8fafc);
+            border-radius: 16px;
+            margin: 2rem 0;
+            overflow: hidden;
+            border: 2px solid rgba(219, 39, 119, 0.2);
+        }
+
+        .target {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            animation: float 3s ease-in-out infinite;
+            user-select: none;
+        }
+
+        .target:hover {
+            transform: scale(1.2);
+        }
+
+        .target.correct {
+            background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+            border: 3px solid #db2777;
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+        }
+
+        .target.distractor {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            border: 3px solid #818cf8;
+            box-shadow: 0 4px 12px rgba(129, 140, 248, 0.3);
+        }
+
+        .target.clicked-correct {
+            animation: correct-pop 0.5s ease;
+        }
+
+        .target.clicked-wrong {
+            animation: wrong-shake 0.5s ease;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes correct-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        @keyframes wrong-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Timer */
+        .timer-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .timer {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #be185d;
+            background: linear-gradient(135deg, #fce7f3, #eef2ff);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .timer.warning {
+            color: #ef4444;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+        }
+
+        .control-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .control-btn.secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* Status Message */
+        .status-message {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 1.5rem 0;
+            min-height: 2rem;
+            color: #be185d;
+        }
+
+        .status-message.success {
+            color: #22c55e;
+        }
+
+        .status-message.error {
+            color: #ef4444;
+        }
+
+        /* Difficulty Selector */
+        .difficulty-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .difficulty-btn {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .difficulty-btn:hover {
+            border-color: #be185d;
+            color: #be185d;
+        }
+
+        .difficulty-btn.active {
+            background: linear-gradient(135deg, #db2777, #be185d);
+            color: white;
+            border-color: #be185d;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-header h1 {
+                font-size: 2rem;
+            }
+
+            .game-board {
+                padding: 2rem 1rem;
+            }
+
+            .game-area {
+                height: 400px;
+            }
+
+            .target {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+
+<style>
+#ns-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-family:sans-serif;font-size:.9rem;font-weight:600;color:white;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s}
+#ns-toast.ok{background:#22c55e}
+#ns-toast.err{background:#ef4444}
+</style>
+<div id="ns-toast"></div>
+</head>
+<body>
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">NeuroSense</div>
+            <button class="back-btn" onclick="window.location.href='/focus-training'">
+                ← Back to Focus Training
+            </button>
+        </header>
+
+        <!-- Game Container -->
+        <div class="game-container">
+            <div class="game-header">
+                <h1>🎯 Target Lock</h1>
+                <p>Click only the correct targets, avoid the distractors!</p>
+            </div>
+
+            <div class="game-board">
+                <!-- Instructions -->
+                <div class="instructions" id="instructions">
+                    <h3>🎮 How to Play:</h3>
+                    <p>Select difficulty and click "Start Game"</p>
+                    <p>Click ONLY the targets that match the symbol shown below</p>
+                    <p>Avoid clicking the distractor symbols - they'll cost you points!</p>
+                    <p>Clear all correct targets before time runs out to win!</p>
+                    
+                    <div class="target-info" id="targetInfo">
+                        Click "Start Game" to begin!
+                    </div>
+                </div>
+
+                <!-- Difficulty Selector -->
+                <div class="difficulty-selector" id="difficulty-selector">
+                    <button class="difficulty-btn active" onclick="setDifficulty('easy', this)">
+                        Easy (10 targets)
+                    </button>
+                    <button class="difficulty-btn" onclick="setDifficulty('medium', this)">
+                        Medium (15 targets)
+                    </button>
+                    <button class="difficulty-btn" onclick="setDifficulty('hard', this)">
+                        Hard (20 targets)
+                    </button>
+                </div>
+
+                <!-- Stats Bar -->
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-label">Round</div>
+                        <div class="stat-value" id="round">1</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Score</div>
+                        <div class="stat-value" id="score">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Targets Left</div>
+                        <div class="stat-value" id="targets-left">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Accuracy</div>
+                        <div class="stat-value" id="accuracy">100%</div>
+                    </div>
+                </div>
+
+                <!-- Timer -->
+                <div class="timer-container" id="timer-container" style="display: none;">
+                    <div class="timer" id="timer">30</div>
+                    <p style="color: #64748b; margin-top: 0.5rem;">seconds remaining</p>
+                </div>
+
+                <!-- Status Message -->
+                <div class="status-message" id="status">Select difficulty and click "Start Game"!</div>
+
+                <!-- Game Area -->
+                <div class="game-area" id="game-area"></div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <button class="control-btn" id="start-btn" onclick="startGame()">
+                        ▶️ Start Game
+                    </button>
+                    <button class="control-btn secondary" onclick="resetGame()">
+                        🔄 New Game
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game constants
+        const SESSION_ROUNDS = 5;
+        let sessionTimer = null;
+
+        // Game symbols
+        const symbols = ['🎯', '⭐', '💎', '🔥', '⚡', '🌟', '💫', '✨', '🎨', '🎭', '🎪', '🎮'];
+        const distractorSymbols = ['❌', '⚠️', '🚫', '❗', '⛔', '🔴', '💢', '🔶', '🔸', '🔺'];
+
+        // Game state
+        let gameState = {
+            difficulty: 'easy',
+            round: 1,
+            score: 0,
+            targetSymbol: null,
+            correctTargets: 0,
+            totalTargets: 0,
+            distractors: 0,
+            targetsClicked: 0,
+            incorrectClicks: 0,
+            isPlaying: false,
+            timer: null,
+            timeRemaining: 30
+        };
+
+        const difficultySettings = {
+            easy: { targets: 5, distractors: 5, time: 30 },
+            medium: { targets: 8, distractors: 7, time: 25 },
+            hard: { targets: 10, distractors: 10, time: 20 }
+        };
+
+        function setDifficulty(level, el) {
+            gameState.difficulty = level;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function startGame() {
+            if (!sessionTimer) { sessionTimer = createGameTimer(); sessionTimer.start(); }
+            const settings = difficultySettings[gameState.difficulty];
+            
+            gameState.targetSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+            gameState.correctTargets = settings.targets;
+            gameState.totalTargets = settings.targets;
+            gameState.distractors = settings.distractors;
+            gameState.targetsClicked = 0;
+            gameState.incorrectClicks = 0;
+            gameState.isPlaying = true;
+            gameState.timeRemaining = settings.time;
+
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('difficulty-selector').style.display = 'none';
+            document.getElementById('timer-container').style.display = 'block';
+            document.getElementById('start-btn').disabled = true;
+            
+            document.getElementById('targetInfo').textContent = `Click all ${gameState.targetSymbol} symbols!`;
+            document.getElementById('targetInfo').style.display = 'block';
+
+            spawnTargets();
+            startTimer();
+            updateDisplay();
+            updateStatus('Find and click all the correct targets!');
+        }
+
+        function spawnTargets() {
+            const gameArea = document.getElementById('game-area');
+            gameArea.innerHTML = '';
+
+            const allTargets = [];
+
+            // Add correct targets
+            for (let i = 0; i < gameState.correctTargets; i++) {
+                allTargets.push({ type: 'correct', symbol: gameState.targetSymbol });
+            }
+
+            // Add distractors
+            for (let i = 0; i < gameState.distractors; i++) {
+                const distractorSymbol = distractorSymbols[Math.floor(Math.random() * distractorSymbols.length)];
+                allTargets.push({ type: 'distractor', symbol: distractorSymbol });
+            }
+
+            // Shuffle
+            allTargets.sort(() => Math.random() - 0.5);
+
+            // Create target elements
+            const areaRect = gameArea.getBoundingClientRect();
+            
+            allTargets.forEach((target, index) => {
+                const targetEl = document.createElement('div');
+                targetEl.className = `target ${target.type}`;
+                targetEl.textContent = target.symbol;
+                targetEl.dataset.type = target.type;
+
+                // Random position
+                const maxX = areaRect.width - 80;
+                const maxY = areaRect.height - 80;
+                const x = Math.random() * maxX + 20;
+                const y = Math.random() * maxY + 20;
+
+                targetEl.style.left = x + 'px';
+                targetEl.style.top = y + 'px';
+                targetEl.style.animationDelay = (index * 0.1) + 's';
+
+                targetEl.addEventListener('click', () => handleTargetClick(targetEl, target.type));
+                gameArea.appendChild(targetEl);
+            });
+        }
+
+        function handleTargetClick(element, type) {
+            if (!gameState.isPlaying) return;
+
+            if (type === 'correct') {
+                element.classList.add('clicked-correct');
+                gameState.targetsClicked++;
+                gameState.correctTargets--;
+                gameState.score += 50;
+
+                setTimeout(() => {
+                    element.remove();
+                }, 500);
+
+                updateStatus('✅ Great! Keep going!', 'success');
+
+                if (gameState.correctTargets === 0) {
+                    winRound();
+                }
+            } else {
+                element.classList.add('clicked-wrong');
+                gameState.incorrectClicks++;
+                gameState.score = Math.max(0, gameState.score - 30);
+
+                setTimeout(() => {
+                    element.classList.remove('clicked-wrong');
+                }, 500);
+
+                updateStatus('❌ Wrong target! Watch out!', 'error');
+            }
+
+            updateDisplay();
+        }
+
+        function startTimer() {
+            clearInterval(gameState.timer);
+
+            gameState.timer = setInterval(() => {
+                gameState.timeRemaining--;
+                updateTimer();
+
+                if (gameState.timeRemaining <= 5) {
+                    document.getElementById('timer').classList.add('warning');
+                }
+
+                if (gameState.timeRemaining <= 0) {
+                    clearInterval(gameState.timer);
+                    loseRound();
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            document.getElementById('timer').textContent = gameState.timeRemaining;
+        }
+
+        function winRound() {
+            clearInterval(gameState.timer);
+            gameState.isPlaying = false;
+
+            const timeBonus = gameState.timeRemaining * 10;
+            gameState.score += timeBonus;
+
+            updateStatus(`🎉 Round Complete! Time Bonus: +${timeBonus}`, 'success');
+            updateDisplay();
+
+            gameState.round++;
+
+            // Only save after completing all rounds
+            if (gameState.round > SESSION_ROUNDS) {
+                finishSession();
+            } else {
+                document.getElementById('start-btn').disabled = false;
+                document.getElementById('start-btn').textContent = '➡️ Next Round';
+            }
+        }
+
+        function loseRound() {
+            gameState.isPlaying = false;
+            updateStatus('⏱️ Time Up! Try again!', 'error');
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('start-btn').textContent = '🔄 Try Again';
+        }
+
+        function resetGame() {
+            clearInterval(gameState.timer);
+
+            gameState = {
+                difficulty: gameState.difficulty,
+                round: 1,
+                score: 0,
+                targetSymbol: null,
+                correctTargets: 0,
+                totalTargets: 0,
+                distractors: 0,
+                targetsClicked: 0,
+                incorrectClicks: 0,
+                isPlaying: false,
+                timer: null,
+                timeRemaining: 30
+            };
+
+            document.getElementById('game-area').innerHTML = '';
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('difficulty-selector').style.display = 'flex';
+            document.getElementById('timer-container').style.display = 'none';
+            document.getElementById('targetInfo').style.display = 'none';
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('start-btn').textContent = '▶️ Start Game';
+            document.getElementById('timer').classList.remove('warning');
+
+            updateStatus('Select difficulty and click "Start Game"!');
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('round').textContent = `${gameState.round}/${SESSION_ROUNDS}`;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('targets-left').textContent = gameState.correctTargets;
+
+            const totalClicks = gameState.targetsClicked + gameState.incorrectClicks;
+            const accuracy = totalClicks > 0 
+                ? Math.round((gameState.targetsClicked / totalClicks) * 100)
+                : 100;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        function updateStatus(message, type = '') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status-message ' + type;
+        }
+
+ async function finishSession(){
+   gameState.isPlaying = false;
+   clearInterval(gameState.timer);
+   const elapsed = sessionTimer.stop();
+   const totalClicks = gameState.targetsClicked + gameState.incorrectClicks;
+   const accuracy = totalClicks>0 ? Math.round((gameState.targetsClicked/totalClicks)*100) : 100;
+   await postScore({
+     gameName: 'FocusTraining-TargetLock',
+     score: gameState.score,
+     timeTakenMs: elapsed,
+     mode: 'limit-rounds',
+     roundsPlayed: SESSION_ROUNDS,
+     extra: {difficulty: gameState.difficulty, accuracy: accuracy}
+   });
+   window.location.href = '/progress';
+ }
+
+ // Initialize display
+ updateDisplay();
+ </script>
+<script>
+// === NeuroSense common helpers ===
+function createGameTimer(){let s=null;return{start(){s=performance.now()},stop(){if(s===null) return 0;const e=performance.now()-s;s=null;return Math.round(e)}}}
+async function postScore({gameName,score,timeTakenMs,mode=null,roundsPlayed=null,extra=null}){try{const res=await fetch('/save_score',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({game_name:gameName,score:score,time_taken_ms:timeTakenMs,mode:mode,rounds_played: roundsPlayed, total_rounds: roundsPlayed,extra:extra})});const data=await res.json();if(!res.ok){console.error('Save failed:',data);alert('Could not save your result.');}return data}catch(err){console.error('Save error:',err);alert('Could not save your result.');return null}}
+
+</script>
+
+<script>
+// ── NeuroSense save-status toast ──
+function _nsToast(msg, type) {
+  const t = document.getElementById('ns-toast');
+  if (!t) return;
+  t.textContent = msg; t.className = type; t.style.display = 'block'; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { t.style.display = 'none'; }, 300); }, 3000);
+}
+// Patch fetch to intercept /save_score responses
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  if (typeof url === 'string' && url.includes('/save_score')) {
+    if (res.status === 200) {
+      _nsToast('✓ Score saved!', 'ok');
+    } else if (res.status === 401) {
+      _nsToast('⚠ Session expired — please log in again', 'err');
+    } else {
+      _nsToast('✗ Score not saved (' + res.status + ')', 'err');
+    }
+    return res.clone();
+  }
+  return res;
+};
+</script>
+</body></html>
